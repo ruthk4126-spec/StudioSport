@@ -21,3 +21,6 @@ build/
 .idea/
 .DS_Store
 Thumbs.db
+
+StudioSport.API/appsettings.Development.json
+*.Backup.tmp
