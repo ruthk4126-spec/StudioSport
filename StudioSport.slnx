@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="StudioSport.API/StudioSport.API.csproj" />
+  <Project Path="StudioSport.Core/StudioSport.Core.csproj" />
+  <Project Path="StudioSport.Data/StudioSport.Data.csproj" />
+  <Project Path="StudioSport.Service/StudioSport.Service.csproj" />
+  <Project Path="StudioSport.Tests/StudioSport.Tests.csproj" />
+</Solution>
