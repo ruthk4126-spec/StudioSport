@@ -9,7 +9,7 @@ public interface IEnrollmentService
 
     Task<bool> CancelAsync(int enrollmentId, int userId, CancellationToken ct);
 
-    Task<List<EnrollmentResponseDto>> GetMyEnrollmentsAsync(int userId, CancellationToken ct);
+    Task<MyEnrollmentsDto> GetMyEnrollmentsAsync(int userId, CancellationToken ct);
 
     Task<EnrollmentResult> AddFeedbackAsync(int enrollmentId, int userId, FeedbackCreateDto dto, CancellationToken ct);
 }

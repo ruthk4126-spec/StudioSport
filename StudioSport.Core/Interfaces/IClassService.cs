@@ -13,5 +13,7 @@ public interface IClassService
 
     Task<ClassResponseDto?> UpdateAsync(int id, ClassUpdateDto dto, CancellationToken ct);
 
+    Task<ClassStatsDto> GetStatsAsync(int days, CancellationToken ct);
+
     Task<bool> CancelClassAsync(int id, CancellationToken ct);
 }

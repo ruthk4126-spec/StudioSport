@@ -66,6 +66,9 @@ namespace StudioSport.Data.Migrations
                     b.Property<int>("Capacity")
                         .HasColumnType("integer");
 
+                    b.Property<int?>("ClassTemplateId")
+                        .HasColumnType("integer");
+
                     b.Property<int>("EnrolledCount")
                         .HasColumnType("integer");
 
@@ -93,9 +96,51 @@ namespace StudioSport.Data.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("ClassTemplateId");
+
                     b.HasIndex("TrainerId");
 
                     b.ToTable("ClassSessions");
+                });
+
+            modelBuilder.Entity("StudioSport.Core.Entities.ClassTemplate", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("Capacity")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("DayOfWeek")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("EquipmentNotes")
+                        .HasColumnType("text");
+
+                    b.Property<DateOnly?>("GeneratedUntil")
+                        .HasColumnType("date");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<TimeOnly>("StartTime")
+                        .HasColumnType("time without time zone");
+
+                    b.Property<int>("TrainerId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TrainerId");
+
+                    b.ToTable("ClassTemplates");
                 });
 
             modelBuilder.Entity("StudioSport.Core.Entities.Enrollment", b =>
@@ -170,11 +215,17 @@ namespace StudioSport.Data.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<DateTime?>("ApprovedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<DateTime>("CreatedAtUtc")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTime>("EndDate")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Plan")
+                        .HasColumnType("integer");
 
                     b.Property<DateTime>("StartDate")
                         .HasColumnType("timestamp with time zone");
@@ -183,6 +234,12 @@ namespace StudioSport.Data.Migrations
                         .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
+
+                    b.Property<int>("TotalClasses")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("UsedClasses")
+                        .HasColumnType("integer");
 
                     b.Property<int>("UserId")
                         .HasColumnType("integer");
@@ -218,10 +275,28 @@ namespace StudioSport.Data.Migrations
 
             modelBuilder.Entity("StudioSport.Core.Entities.ClassSession", b =>
                 {
+                    b.HasOne("StudioSport.Core.Entities.ClassTemplate", "ClassTemplate")
+                        .WithMany()
+                        .HasForeignKey("ClassTemplateId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("StudioSport.Core.Entities.Trainer", "Trainer")
                         .WithMany("ClassSessions")
                         .HasForeignKey("TrainerId")
                         .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("ClassTemplate");
+
+                    b.Navigation("Trainer");
+                });
+
+            modelBuilder.Entity("StudioSport.Core.Entities.ClassTemplate", b =>
+                {
+                    b.HasOne("StudioSport.Core.Entities.Trainer", "Trainer")
+                        .WithMany()
+                        .HasForeignKey("TrainerId")
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Trainer");

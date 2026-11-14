@@ -22,6 +22,9 @@ public class ClassSession
     // many-to-one: שיעור שייך למדריכה
     public int TrainerId { get; set; }
     public Trainer? Trainer { get; set; }
+    // מאיזו תבנית נוצר המופע - null אם נוצר ידנית
+    public int? ClassTemplateId { get; set; }
+    public ClassTemplate? ClassTemplate { get; set; }
 
     // one-to-many: שיעור אחד, רישומים רבים
     public ICollection<Enrollment> Enrollments { get; set; } = new List<Enrollment>();

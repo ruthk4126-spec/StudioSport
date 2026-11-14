@@ -21,5 +21,10 @@ public class ClassSessionConfiguration : IEntityTypeConfiguration<ClassSession>
             .WithMany(t => t.ClassSessions)
             .HasForeignKey(c => c.TrainerId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne(c => c.ClassTemplate)
+               .WithMany()
+               .HasForeignKey(c => c.ClassTemplateId)
+               .OnDelete(DeleteBehavior.SetNull);
     }
 }

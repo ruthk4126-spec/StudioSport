@@ -48,8 +48,9 @@ public class EnrollmentsController : ControllerBase
         return ok ? NoContent() : Forbid();
     }
 
+ 
     [HttpGet("api/enrollments/my")]
-    [ProducesResponseType(typeof(List<EnrollmentResponseDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(MyEnrollmentsDto), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetMine(CancellationToken ct)
         => Ok(await _enrollments.GetMyEnrollmentsAsync(GetUserId(), ct));
 

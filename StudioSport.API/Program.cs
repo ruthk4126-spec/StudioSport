@@ -13,7 +13,7 @@ using StudioSport.Data.Seed;
 using StudioSport.Service.Mapping;
 using StudioSport.Service.Services;
 using Microsoft.Extensions.Configuration;
-
+using StudioSport.Service.Services;
 var builder = WebApplication.CreateBuilder(args);
 builder.Configuration.AddUserSecrets<Program>(optional: true);
 
@@ -69,6 +69,18 @@ builder.Services.AddAuthorization();
 
 // --- Controllers + Swagger ---
 builder.Services.AddControllers();
+
+// --- CORS (ללקוח) ---
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("ClientApp", policy =>
+        policy.WithOrigins("http://localhost:5500", "http://127.0.0.1:5500")
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .WithExposedHeaders("X-Correlation-Id"));
+});
+
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
@@ -84,6 +96,7 @@ builder.Services.AddSwaggerGen(c =>
         Description = "הזיני: Bearer {token}"
     });
 });
+builder.Services.AddHostedService<ClassGenerationService>();
 
 var app = builder.Build();
 
@@ -91,7 +104,7 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    await DbSeeder.SeedAsync(db);
+    await Task.CompletedTask;   // TEMP: בדיקה — האם ה-Seed חוסם את העלייה
 }
 
 // --- Pipeline: הסדר קריטי ---
@@ -100,6 +113,9 @@ app.UseMiddleware<CorrelationIdMiddleware>();
 
 // 2. ExceptionHandling שני - תופס כל מה שאחריו
 app.UseMiddleware<ExceptionHandlingMiddleware>();
+
+// 3. CORS - לפני Authentication/Authorization
+app.UseCors("ClientApp");
 
 if (app.Environment.IsDevelopment())
 {

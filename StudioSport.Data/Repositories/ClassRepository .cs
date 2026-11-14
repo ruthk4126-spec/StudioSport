@@ -23,35 +23,30 @@ public class ClassRepository : IClassRepository
             .Include(c => c.Trainer)
             .FirstOrDefaultAsync(c => c.Id == id, ct);
 
-    public async Task<PagedResult<ClassSession>> GetPagedAsync(ClassQueryParameters q, CancellationToken ct)
+    public async Task<PagedResult<ClassSession>> GetPagedAsync(ClassQueryParameters query, CancellationToken ct)
     {
-        IQueryable<ClassSession> query = _db.ClassSessions
-            .AsNoTracking()
-            .Include(c => c.Trainer);
+        var now = DateTime.UtcNow;
 
-        if (q.FromDate.HasValue)
-            query = query.Where(c => c.StartTime >= q.FromDate.Value);
+        var q = _db.ClassSessions
+            .Include(c => c.Trainer)
+            .Where(c => !c.IsCancelled && c.StartTime > now);
 
-        if (q.TrainerId.HasValue)
-            query = query.Where(c => c.TrainerId == q.TrainerId.Value);
+        var total = await q.CountAsync(ct);
 
-        var total = await query.CountAsync(ct);
-
-        var items = await query
+        var items = await q
             .OrderBy(c => c.StartTime)
-            .Skip((q.Page - 1) * q.PageSize)
-            .Take(q.PageSize)
+            .Skip((query.Page - 1) * query.PageSize)
+            .Take(query.PageSize)
             .ToListAsync(ct);
 
         return new PagedResult<ClassSession>
         {
             Items = items,
-            Page = q.Page,
-            PageSize = q.PageSize,
+            Page = query.Page,
+            PageSize = query.PageSize,
             TotalCount = total
         };
     }
-
     public async Task AddAsync(ClassSession entity, CancellationToken ct)
     {
         _db.ClassSessions.Add(entity);

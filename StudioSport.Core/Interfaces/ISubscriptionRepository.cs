@@ -7,8 +7,9 @@ public interface ISubscriptionRepository
     Task<Subscription?> GetActiveByUserIdAsync(int userId, DateTime onDate, CancellationToken ct);
 
     Task<Subscription?> GetLatestByUserIdAsync(int userId, CancellationToken ct);
-
+    Task<IReadOnlyList<Subscription>> GetPendingAsync(CancellationToken ct);
     Task AddAsync(Subscription entity, CancellationToken ct);
-
+    Task<Subscription?> GetByIdAsync(int id, CancellationToken ct);
     Task UpdateAsync(Subscription entity, CancellationToken ct);
+
 }

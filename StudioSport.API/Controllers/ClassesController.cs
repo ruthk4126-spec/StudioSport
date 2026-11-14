@@ -15,6 +15,12 @@ public class ClassesController : ControllerBase
 
     public ClassesController(IClassService classes) => _classes = classes;
 
+    [HttpGet("stats")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(ClassStatsDto), StatusCodes.Status200OK)]
+    public async Task<IActionResult> Stats([FromQuery] int days = 7, CancellationToken ct = default)
+        => Ok(await _classes.GetStatsAsync(days, ct));
+
     [HttpGet]
     [AllowAnonymous]
     [ProducesResponseType(typeof(PagedResult<ClassResponseDto>), StatusCodes.Status200OK)]
@@ -63,4 +69,5 @@ public class ClassesController : ControllerBase
         var ok = await _classes.CancelClassAsync(id, ct);
         return ok ? NoContent() : NotFound();
     }
+
 }

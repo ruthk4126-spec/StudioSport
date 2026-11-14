@@ -5,7 +5,6 @@ using StudioSport.Core.DTOs.Enrollments;
 using StudioSport.Core.Entities;
 using StudioSport.Core.Enums;
 using StudioSport.Core.Interfaces;
-using StudioSport.Core.Common;
 
 namespace StudioSport.Service.Services;
 
@@ -17,6 +16,7 @@ public class EnrollmentService : IEnrollmentService
     private readonly IFeedbackRepository _feedbacks;
     private readonly ILogger<EnrollmentService> _logger;
     private readonly BookingSettings _settings;
+    private readonly ISubscriptionService _subscriptionService;
 
     public EnrollmentService(
         IEnrollmentRepository enrollments,
@@ -24,11 +24,13 @@ public class EnrollmentService : IEnrollmentService
         ISubscriptionRepository subscriptions,
         IFeedbackRepository feedbacks,
         ILogger<EnrollmentService> logger,
-        IOptions<BookingSettings> settings)
+        IOptions<BookingSettings> settings,
+        ISubscriptionService subscriptionService)
     {
         _enrollments = enrollments;
         _classes = classes;
         _subscriptions = subscriptions;
+        _subscriptionService = subscriptionService;
         _feedbacks = feedbacks;
         _logger = logger;
         _settings = settings.Value;
@@ -60,6 +62,16 @@ public class EnrollmentService : IEnrollmentService
         if (subscription is null)
             return EnrollmentResult.Failure(EnrollmentOutcome.SubscriptionRequired);
 
+        // 5ב. יש יתרת שיעורים במנוי? (אין ערך נפרד ב-enum — אותה תוצאה כמו "אין מנוי")
+        if (subscription.TotalClasses <= subscription.UsedClasses)
+        {
+            _logger.LogInformation(
+                "User {UserId} has no credit left: {Used}/{Total}",
+                userId, subscription.UsedClasses, subscription.TotalClasses);
+
+            return EnrollmentResult.Failure(EnrollmentOutcome.SubscriptionRequired);
+        }
+
         // 6. כבר רשומה?
         var existing = await _enrollments.GetByUserAndClassAsync(userId, classId, ct);
         if (existing is not null)
@@ -86,22 +98,32 @@ public class EnrollmentService : IEnrollmentService
             return EnrollmentResult.Failure(EnrollmentOutcome.ClassFull);
         }
 
-        // 9. יצירת הרישום
-        var enrollment = new Enrollment
+        // 9. יצירת הרישום + צריכת השיעור, עם שחרור המקום בכל כשלון
+        try
         {
-            ClassSessionId = classId,
-            UserId = userId,
-            Status = EnrollmentStatus.Active,
-            CreatedAtUtc = DateTime.UtcNow
-        };
+            var enrollment = new Enrollment
+            {
+                ClassSessionId = classId,
+                UserId = userId,
+                Status = EnrollmentStatus.Active,
+                CreatedAtUtc = DateTime.UtcNow
+            };
 
-        await _enrollments.AddAsync(enrollment, ct);
+            await _enrollments.AddAsync(enrollment, ct);
+            await _subscriptionService.ConsumeCreditAsync(userId, ct);
 
-        _logger.LogInformation(
-            "User {UserId} enrolled in class {ClassId}. EnrollmentId {EnrollmentId}",
-            userId, classId, enrollment.Id);
+            _logger.LogInformation(
+                "User {UserId} enrolled in class {ClassId}. EnrollmentId {EnrollmentId}",
+                userId, classId, enrollment.Id);
 
-        return EnrollmentResult.Success(enrollment.Id);
+            return EnrollmentResult.Success(enrollment.Id);
+        }
+        catch
+        {
+            // מחזירים את המקום שנתפס, כדי שלא יישאר "תפוס" בלי רישום
+            await _classes.ReleaseSpotAsync(classId, ct);
+            throw;
+        }
     }
 
     public async Task<bool> CancelAsync(int enrollmentId, int userId, CancellationToken ct)
@@ -121,8 +143,9 @@ public class EnrollmentService : IEnrollmentService
         enrollment.CancelledAtUtc = DateTime.UtcNow;
         await _enrollments.UpdateAsync(enrollment, ct);
 
-        // שחרור המקום
+        // שחרור המקום והחזרת השיעור למכסה
         await _classes.ReleaseSpotAsync(enrollment.ClassSessionId, ct);
+        await _subscriptionService.RefundCreditAsync(userId, ct);
 
         _logger.LogInformation(
             "Enrollment {EnrollmentId} cancelled by user {UserId}",
@@ -131,20 +154,40 @@ public class EnrollmentService : IEnrollmentService
         return true;
     }
 
-    public async Task<List<EnrollmentResponseDto>> GetMyEnrollmentsAsync(int userId, CancellationToken ct)
+    public async Task<MyEnrollmentsDto> GetMyEnrollmentsAsync(int userId, CancellationToken ct)
     {
         var list = await _enrollments.GetUserEnrollmentsAsync(userId, ct);
+        var now = DateTime.UtcNow;
 
-        return list.Select(e => new EnrollmentResponseDto
+        var mapped = list.Select(e =>
         {
-            Id = e.Id,
-            ClassId = e.ClassSessionId,
-            ClassName = e.ClassSession?.Name ?? string.Empty,
-            StartTime = e.ClassSession?.StartTime ?? default,
-            Status = e.Status.ToString(),
-            CreatedAtUtc = e.CreatedAtUtc,
-            EquipmentNotes = e.ClassSession?.EquipmentNotes
+            var startTime = e.ClassSession?.StartTime ?? default;
+
+            return new EnrollmentResponseDto
+            {
+                Id = e.Id,
+                ClassId = e.ClassSessionId,
+                ClassName = e.ClassSession?.Name ?? string.Empty,
+                StartTime = startTime,
+                Status = e.Status.ToString(),
+                IsPast = startTime <= now,
+                CreatedAtUtc = e.CreatedAtUtc,
+                EquipmentNotes = e.ClassSession?.EquipmentNotes
+            };
         }).ToList();
+
+        // "קרוב" = הרשמה פעילה שהשיעור שלה טרם התקיים
+        var active = mapped
+            .Where(e => e.Status == nameof(EnrollmentStatus.Active) && !e.IsPast)
+            .OrderBy(e => e.StartTime)
+            .ToList();
+
+        var history = mapped
+            .Where(e => e.Status != nameof(EnrollmentStatus.Active) || e.IsPast)
+            .OrderByDescending(e => e.StartTime)
+            .ToList();
+
+        return new MyEnrollmentsDto { Active = active, History = history };
     }
 
     public async Task<EnrollmentResult> AddFeedbackAsync(

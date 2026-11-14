@@ -12,6 +12,8 @@ public class EnrollmentResponseDto
 
     public string Status { get; set; } = string.Empty;
 
+    public bool IsPast { get; set; }
+
     public DateTime CreatedAtUtc { get; set; }
 
     // מה להביא לשיעור - מוצג אחרי ההזמנה
