@@ -1,0 +1,1 @@
+UPDATE "ClassSessions" AS c SET "EnrolledCount" = (SELECT COUNT(*) FROM "Enrollments" AS e WHERE e."ClassSessionId" = c."Id" AND e."Status" = 'Active');

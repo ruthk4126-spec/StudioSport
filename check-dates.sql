@@ -1,0 +1,1 @@
+SELECT "Id", "UserId", "Status", "StartDate", "EndDate", "TotalClasses", "UsedClasses", NOW() AS Now FROM "Subscriptions";

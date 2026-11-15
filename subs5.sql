@@ -1,0 +1,1 @@
+SELECT "Id","UserId","Status","Plan","TotalClasses","UsedClasses" FROM "Subscriptions" WHERE "UserId" = 5;

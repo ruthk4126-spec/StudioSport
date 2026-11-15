@@ -1,0 +1,1 @@
+SELECT "Id", "Name", "Capacity", "EnrolledCount", "StartTime" FROM "ClassSessions" ORDER BY "StartTime";

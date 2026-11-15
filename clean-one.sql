@@ -1,0 +1,1 @@
+DELETE FROM "ClassSessions" WHERE "Id" = 64 AND NOT EXISTS (SELECT 1 FROM "Enrollments" WHERE "ClassSessionId" = 64);

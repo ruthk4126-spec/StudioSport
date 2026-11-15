@@ -1,0 +1,1 @@
+SELECT c."Name", c."StartTime", c."Id", c."EnrolledCount" FROM "ClassSessions" c WHERE (c."Name", c."StartTime") IN (SELECT "Name", "StartTime" FROM "ClassSessions" GROUP BY "Name", "StartTime" HAVING COUNT(*) > 1) ORDER BY c."StartTime", c."Id";

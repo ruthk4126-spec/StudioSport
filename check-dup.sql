@@ -1,0 +1,1 @@
+SELECT "Name", "StartTime", COUNT(*) AS Cnt FROM "ClassSessions" GROUP BY "Name", "StartTime" HAVING COUNT(*) > 1 ORDER BY "StartTime";

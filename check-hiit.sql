@@ -1,0 +1,1 @@
+SELECT "Id", "Name", "StartTime", "Capacity", "EnrolledCount", "ClassTemplateId", "IsCancelled" FROM "ClassSessions" WHERE "StartTime" = '2026-11-11 12:00:00+02'::timestamptz;

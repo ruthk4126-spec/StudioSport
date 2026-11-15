@@ -11,5 +11,5 @@ public interface ISubscriptionRepository
     Task AddAsync(Subscription entity, CancellationToken ct);
     Task<Subscription?> GetByIdAsync(int id, CancellationToken ct);
     Task UpdateAsync(Subscription entity, CancellationToken ct);
-
+    Task GetActiveByUserIdAsync(int userId, CancellationToken ct);
 }

@@ -1,0 +1,1 @@
+SELECT "Id", "Name", "StartTime", "Capacity", "EnrolledCount" FROM "ClassSessions" WHERE "ClassTemplateId" IS NULL ORDER BY "StartTime";

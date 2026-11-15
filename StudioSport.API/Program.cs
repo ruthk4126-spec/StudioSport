@@ -1,4 +1,4 @@
-using System.Text;
+﻿using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -13,7 +13,6 @@ using StudioSport.Data.Seed;
 using StudioSport.Service.Mapping;
 using StudioSport.Service.Services;
 using Microsoft.Extensions.Configuration;
-using StudioSport.Service.Services;
 var builder = WebApplication.CreateBuilder(args);
 builder.Configuration.AddUserSecrets<Program>(optional: true);
 
@@ -33,7 +32,7 @@ builder.Services.AddScoped<ISubscriptionRepository, SubscriptionRepository>();
 builder.Services.AddScoped<IFeedbackRepository, FeedbackRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 
-// --- הגדרות ---
+// --- ׳”׳’׳“׳¨׳•׳× ---
 builder.Services.Configure<BookingSettings>(builder.Configuration.GetSection("BookingSettings"));
 
 // --- Services ---
@@ -70,7 +69,7 @@ builder.Services.AddAuthorization();
 // --- Controllers + Swagger ---
 builder.Services.AddControllers();
 
-// --- CORS (ללקוח) ---
+// --- CORS (׳׳׳§׳•׳—) ---
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("ClientApp", policy =>
@@ -93,7 +92,7 @@ builder.Services.AddSwaggerGen(c =>
         Scheme = "bearer",
         BearerFormat = "JWT",
         In = ParameterLocation.Header,
-        Description = "הזיני: Bearer {token}"
+        Description = "׳”׳–׳™׳ ׳™: Bearer {token}"
     });
 });
 builder.Services.AddHostedService<ClassGenerationService>();
@@ -104,17 +103,17 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    await Task.CompletedTask;   // TEMP: בדיקה — האם ה-Seed חוסם את העלייה
+    await Task.CompletedTask;   // TEMP: ׳‘׳“׳™׳§׳” ג€” ׳”׳׳ ׳”-Seed ׳—׳•׳¡׳ ׳׳× ׳”׳¢׳׳™׳™׳”
 }
 
-// --- Pipeline: הסדר קריטי ---
-// 1. CorrelationId ראשון - כדי שגם שגיאות יירשמו עם המזהה
+// --- Pipeline: ׳”׳¡׳“׳¨ ׳§׳¨׳™׳˜׳™ ---
+// 1. CorrelationId ׳¨׳׳©׳•׳ - ׳›׳“׳™ ׳©׳’׳ ׳©׳’׳™׳׳•׳× ׳™׳™׳¨׳©׳׳• ׳¢׳ ׳”׳׳–׳”׳”
 app.UseMiddleware<CorrelationIdMiddleware>();
 
-// 2. ExceptionHandling שני - תופס כל מה שאחריו
+// 2. ExceptionHandling ׳©׳ ׳™ - ׳×׳•׳₪׳¡ ׳›׳ ׳׳” ׳©׳׳—׳¨׳™׳•
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 
-// 3. CORS - לפני Authentication/Authorization
+// 3. CORS - ׳׳₪׳ ׳™ Authentication/Authorization
 app.UseCors("ClientApp");
 
 if (app.Environment.IsDevelopment())
@@ -124,7 +123,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-app.UseAuthentication();   // לפני Authorization
+app.UseAuthentication();   // ׳׳₪׳ ׳™ Authorization
 app.UseAuthorization();
 
 app.MapControllers();

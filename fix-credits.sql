@@ -1,0 +1,1 @@
+UPDATE "Subscriptions" SET "TotalClasses" = 10 WHERE "Status" = 'Active';

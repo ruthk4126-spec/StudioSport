@@ -1,0 +1,1 @@
+SELECT "Id","UserId","Plan","Status","TotalClasses","UsedClasses" FROM "Subscriptions" ORDER BY "Id" DESC;

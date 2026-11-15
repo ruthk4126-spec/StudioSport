@@ -5,7 +5,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using StudioSport.Core.Entities;
 using StudioSport.Core.Interfaces;
-using Microsoft.Extensions.Configuration;
 
 namespace StudioSport.Service.Services;
 

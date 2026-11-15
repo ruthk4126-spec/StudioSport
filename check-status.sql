@@ -1,0 +1,1 @@
+SELECT "Id", "UserId", "Status", "TotalClasses", "UsedClasses" FROM "Subscriptions";

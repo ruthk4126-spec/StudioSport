@@ -1,0 +1,1 @@
+select "Id","Name","DayOfWeek","StartTime" from "ClassTemplates";

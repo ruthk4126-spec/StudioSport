@@ -1,0 +1,1 @@
+SELECT c."Id", c."Capacity", c."EnrolledCount", (SELECT COUNT(*) FROM "Enrollments" e WHERE e."ClassSessionId" = c."Id" AND e."Status" = 'Active') AS ActualActive FROM "ClassSessions" c WHERE c."StartTime" > NOW() AND c."EnrolledCount" <> (SELECT COUNT(*) FROM "Enrollments" e WHERE e."ClassSessionId" = c."Id" AND e."Status" = 'Active') ORDER BY c."StartTime";

@@ -1,0 +1,1 @@
+SELECT e."Id", e."ClassSessionId", e."UserId", e."Status", c."Name", c."StartTime" FROM "Enrollments" e JOIN "ClassSessions" c ON c."Id" = e."ClassSessionId" ORDER BY e."Id" DESC LIMIT 20;

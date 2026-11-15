@@ -1,0 +1,1 @@
+UPDATE "Subscriptions" SET "Status" = 'Active', "StartDate" = NOW(), "EndDate" = NOW() + INTERVAL '365 days' WHERE "Id" = 3;

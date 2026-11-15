@@ -1,0 +1,1 @@
+SELECT c."Id", c."Capacity", c."EnrolledCount", (SELECT COUNT(*) FROM "Enrollments" e WHERE e."ClassSessionId" = c."Id") AS ActualEnrollments FROM "ClassSessions" c WHERE c."StartTime" = '2026-11-10 09:30:00+02'::timestamptz;
