@@ -1,4 +1,4 @@
-﻿using System.Text;
+using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -32,7 +32,7 @@ builder.Services.AddScoped<ISubscriptionRepository, SubscriptionRepository>();
 builder.Services.AddScoped<IFeedbackRepository, FeedbackRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 
-// --- ׳”׳’׳“׳¨׳•׳× ---
+// --- Settings ---
 builder.Services.Configure<BookingSettings>(builder.Configuration.GetSection("BookingSettings"));
 
 // --- Services ---
@@ -69,7 +69,7 @@ builder.Services.AddAuthorization();
 // --- Controllers + Swagger ---
 builder.Services.AddControllers();
 
-// --- CORS (׳׳׳§׳•׳—) ---
+// --- CORS (client app) ---
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("ClientApp", policy =>
@@ -92,7 +92,7 @@ builder.Services.AddSwaggerGen(c =>
         Scheme = "bearer",
         BearerFormat = "JWT",
         In = ParameterLocation.Header,
-        Description = "׳”׳–׳™׳ ׳™: Bearer {token}"
+        Description = "Header: Bearer {token}"
     });
 });
 builder.Services.AddHostedService<ClassGenerationService>();
@@ -103,17 +103,15 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    await Task.CompletedTask;   // TEMP: ׳‘׳“׳™׳§׳” ג€” ׳”׳׳ ׳”-Seed ׳—׳•׳¡׳ ׳׳× ׳”׳¢׳׳™׳™׳”
+    await StudioSport.Data.Seed.DbSeeder.SeedAsync(db);
 }
-
-// --- Pipeline: ׳”׳¡׳“׳¨ ׳§׳¨׳™׳˜׳™ ---
-// 1. CorrelationId ׳¨׳׳©׳•׳ - ׳›׳“׳™ ׳©׳’׳ ׳©׳’׳™׳׳•׳× ׳™׳™׳¨׳©׳׳• ׳¢׳ ׳”׳׳–׳”׳”
+// 1. CorrelationId - assign request id first, so errors carry it
 app.UseMiddleware<CorrelationIdMiddleware>();
 
-// 2. ExceptionHandling ׳©׳ ׳™ - ׳×׳•׳₪׳¡ ׳›׳ ׳׳” ׳©׳׳—׳¨׳™׳•
+// 2. Exception handling - must wrap the whole pipeline
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 
-// 3. CORS - ׳׳₪׳ ׳™ Authentication/Authorization
+// 3. CORS - before Authentication/Authorization
 app.UseCors("ClientApp");
 
 if (app.Environment.IsDevelopment())
@@ -126,7 +124,7 @@ if (!app.Environment.IsProduction())
 {
     app.UseHttpsRedirection();
 }
-app.UseAuthentication();   // ׳׳₪׳ ׳™ Authorization
+app.UseAuthentication();   // before Authorization
 app.UseAuthorization();
 app.UseDefaultFiles();
 app.UseStaticFiles();

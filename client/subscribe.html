@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StudioSport — הרשמה למנוי</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+  <header class="topbar">
+    <div class="brand">Studio<span>Sport</span></div>
+    <div class="user-area">
+      <a href="classes.html" class="btn btn-ghost" style="padding:8px 18px;font-size:14px">שיעורים זמינים</a>
+      <a href="my-classes.html" class="btn btn-ghost" style="padding:8px 18px;font-size:14px">השיעורים שלי</a>
+      <span id="userName"></span>
+      <div class="avatar" id="userAvatar"></div>
+      <button class="btn btn-ghost" style="padding:8px 18px;font-size:14px" onclick="logout()">יציאה</button>
+    </div>
+  </header>
+
+  <main class="page">
+    <h1 class="page-title">בחירת חבילת שיעורים</h1>
+    <p class="page-sub">בחרי חבילה. הבקשה תישלח לאישור המנהל, והשיעורים ייכנסו ליתרה שלך לאחר האישור.</p>
+
+    <div id="pageAlert" class="alert"></div>
+
+    <div class="preview-grid" id="plansGrid">
+      <div class="mini-card"><span class="meta">טוען...</span></div>
+    </div>
+  </main>
+
+  <script src="js/api.js?v=2"></script>
+  <script>
+    requireAuth();
+    renderUserArea();
+
+    const PLAN_LABELS = {
+      Single: "שיעור בודד",
+      Four: "חבילת 4 שיעורים",
+      Ten: "חבילת 10 שיעורים",
+      Twenty: "חבילת 20 שיעורים"
+    };
+
+    let currentPlan = null;
+    let requesting = false;
+
+    function asArray(payload) {
+      if (Array.isArray(payload)) return payload;
+      if (payload && Array.isArray(payload.value)) return payload.value;
+      if (payload && Array.isArray(payload.items)) return payload.items;
+      if (payload && Array.isArray(payload.data)) return payload.data;
+      return [];
+    }
+
+  async function checkBlocked() {
+      try {
+        const subRes = await Api.getMySubscription();
+        if (subRes.ok && subRes.data) {
+          const active = subRes.data.isActive ?? subRes.data.IsActive;
+          if (active) return "יש לך מנוי פעיל. לא ניתן לשלוח בקשה חדשה.";
+        }
+
+        const pendRes = await Api.getMyPending();
+        if (pendRes.ok && pendRes.data) {
+          return "הבקשה שלך ממתינה לאישור המנהל.";
+        }
+      } catch (err) {
+        console.error(err);
+      }
+      return null;
+    }
+
+    async function loadPlans() {
+      const grid = document.getElementById("plansGrid");
+
+      const blockedReason = await checkBlocked();
+      if (blockedReason) {
+        showAlert("pageAlert", blockedReason, "error");
+        grid.innerHTML = "";
+        return;
+      }
+
+      let res;
+      try {
+        res = await Api.getPlans();
+      } catch (err) {
+        console.error(err);
+        showAlert("pageAlert", "לא ניתן להתחבר לשרת. ודאי שהוא פועל.", "error");
+        grid.innerHTML = "";
+        return;
+      }
+
+      const plans = asArray(res.data);
+
+      if (!res.ok || !plans.length) {
+        showAlert("pageAlert", "לא ניתן לטעון את החבילות", "error");
+        grid.innerHTML = "";
+        return;
+      }
+
+      grid.innerHTML = plans.map(p => `
+        <div class="mini-card">
+          <h3>${escapeHtml(PLAN_LABELS[p.plan] || p.plan)}</h3>
+          <div class="stat-value">${p.totalClasses}</div>
+          <p class="meta">שיעורים</p>
+          <button type="button" class="btn btn-primary" style="margin-top:16px;width:100%"
+                  onclick="choosePlan('${escapeHtml(p.plan)}')">בחירת חבילה זו</button>
+        </div>`).join("");
+    }
+    async function choosePlan(plan) {
+      if (requesting) return;
+      requesting = true;
+      currentPlan = plan;
+
+      hideAlert("pageAlert");
+
+      let res;
+      try {
+        res = await Api.requestSubscription(plan);
+      } catch (err) {
+        requesting = false;
+        showAlert("pageAlert", "לא ניתן להתחבר לשרת.", "error");
+        return;
+      }
+
+      requesting = false;
+
+      if (res.ok) {
+        showAlert("pageAlert", "הבקשה נשלחה לאישור המנהל. אפשר לחזור לדף השיעורים שלי.", "success");
+        document.querySelectorAll("#plansGrid button").forEach(b => {
+          b.disabled = true;
+          b.textContent = "בקשה נשלחה";
+        });
+      } else {
+        const msg = res.data?.message || res.data?.detail || "לא ניתן לשלוח את הבקשה.";
+        showAlert("pageAlert", msg, "error");
+      }
+    }
+
+    loadPlans();
+  </script>
+</body>
+
+</html>

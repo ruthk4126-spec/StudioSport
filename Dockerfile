@@ -14,5 +14,6 @@ FROM mcr.microsoft.com/dotnet/aspnet:10.0
 WORKDIR /app
 COPY --from=build /app .
 ENV ASPNETCORE_URLS=http://0.0.0.0:10000
+ENV ASPNETCORE_ENVIRONMENT=Production
 EXPOSE 10000
 ENTRYPOINT ["dotnet", "StudioSport.API.dll"]
