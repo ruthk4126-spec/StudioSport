@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StudioSport — ניהול מנויים</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <header class="topbar">
+    <div class="brand">Studio<span>Sport</span></div>
+    <div class="user-area">
+      <a href="classes.html" class="btn btn-ghost" style="padding:8px 18px;font-size:14px">שיעורים</a>
+      <a href="my-classes.html" class="btn btn-ghost" style="padding:8px 18px;font-size:14px">השיעורים שלי</a>
+      <a href="subscribe.html" class="btn btn-ghost" style="padding:8px 18px;font-size:14px">המנוי שלי</a>
+      <span id="userName"></span>
+      <div class="avatar" id="userAvatar"></div>
+      <button class="btn btn-ghost" style="padding:8px 18px;font-size:14px" onclick="logout()">יציאה</button>
+    </div>
+  </header>
+
+  <main class="page">
+    <h1 class="page-title">בקשות מנוי</h1>
+    <p class="page-sub">בקשות הממתינות לאישור. אישור מפעיל את המנוי לשנה ומאפשר הרשמה לשיעורים.</p>
+
+    <div id="pageAlert" class="alert"></div>
+
+    <div class="stats">
+      <div class="stat-card">
+        <div class="stat-value" id="statPending">—</div>
+        <div class="stat-label">בקשות ממתינות</div>
+      </div>
+    </div>
+
+    <div class="table-card">
+      <table>
+        <thead>
+          <tr>
+            <th>משתמש</th>
+            <th>חבילה</th>
+            <th>שיעורים</th>
+            <th>תאריך בקשה</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="pendingBody">
+          <tr><td colspan="5" class="empty-state">טוען...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+
+  <script src="js/api.js"></script>
+  <script>
+    /* ---------- הגנת דף: מנהל בלבד ---------- */
+
+    requireAuth();
+
+    const currentUser = getUser();
+    if (!currentUser || currentUser.role !== "Admin") {
+      window.location.href = "classes.html";
+    }
+    renderUserArea();
+
+    /* ---------- עזרים ---------- */
+
+    const PLAN_LABELS = {
+      0: "בודד",
+      1: "ארבעה",
+      2: "עשרה",
+      3: "עשרים",
+      Single: "בודד",
+      Four: "ארבעה",
+      Ten: "עשרה",
+      Twenty: "עשרים"
+    };
+
+    function planLabel(plan) {
+      return PLAN_LABELS[plan] ?? plan ?? "";
+    }
+
+    // סטטוס עשוי לחזור כמחרוזת או כמספר
+    function isPendingStatus(status) {
+      return status === "Pending" || status === 0;
+    }
+
+    let currentPending = [];
+
+    /* ---------- טעינה ---------- */
+
+    async function loadPending() {
+      hideAlert("pageAlert");
+
+      let res;
+      try {
+        res = await Api.getPendingSubscriptions();
+      } catch (err) {
+        console.error(err);
+        showAlert("pageAlert", "לא ניתן להתחבר לשרת. ודאי שהוא פועל.", "error");
+        return;
+      }
+
+      if (!res.ok) {
+        showAlert("pageAlert", res.data?.message || "לא ניתן לטעון בקשות", "error");
+        document.getElementById("pendingBody").innerHTML =
+          '<tr><td colspan="5" class="empty-state">אין נתונים להצגה</td></tr>';
+        return;
+      }
+
+      currentPending = asArray(res.data);
+      document.getElementById("statPending").textContent = currentPending.length;
+      renderPending();
+    }
+
+    /* ---------- תצוגה ---------- */
+
+    function renderPending() {
+      const body = document.getElementById("pendingBody");
+
+      if (!currentPending.length) {
+        body.innerHTML =
+          '<tr><td colspan="5" class="empty-state">אין בקשות ממתינות</td></tr>';
+        return;
+      }
+
+      body.innerHTML = currentPending.map(s => `
+        <tr>
+          <td>
+            <span class="class-name">${escapeHtml(s.username || "—")}</span>
+            <span class="class-note">מזהה משתמש ${escapeHtml(String(s.userId ?? ""))}</span>
+          </td>
+          <td>${escapeHtml(planLabel(s.plan))}</td>
+          <td>${escapeHtml(String(s.totalClasses ?? "—"))}</td>
+          <td>${formatDate(s.startDate)}</td>
+          <td style="text-align:left">
+            <button class="btn btn-primary" style="font-size:14px;padding:9px 20px"
+                    onclick="approve(${s.id}, this)">אישור</button>
+          </td>
+        </tr>`).join("");
+    }
+
+    /* ---------- אישור ---------- */
+
+    async function approve(id, btn) {
+      btn.disabled = true;
+      btn.textContent = "מאשר...";
+
+      let res;
+      try {
+        res = await Api.approveSubscription(id);
+      } catch (err) {
+        console.error(err);
+        showAlert("pageAlert", "לא ניתן להתחבר לשרת.", "error");
+        btn.disabled = false;
+        btn.textContent = "אישור";
+        return;
+      }
+
+      if (res.ok) {
+        showAlert("pageAlert", "המנוי אושר.", "success");
+        await loadPending();
+        return;
+      }
+
+      btn.disabled = false;
+      btn.textContent = "אישור";
+
+      // 409 = המנוי כבר אינו ממתין (אושר או בוטל בינתיים)
+      if (res.status === 409) {
+        showAlert("pageAlert", res.data?.message || "המנוי אינו ממתין לאישור.", "error");
+        await loadPending();
+        return;
+      }
+
+      showAlert("pageAlert", res.data?.message || "לא ניתן לאשר את המנוי.", "error");
+    }
+
+    loadPending();
+  </script>
+</body>
+</html>
