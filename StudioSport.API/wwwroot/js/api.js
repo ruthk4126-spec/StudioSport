@@ -1,4 +1,4 @@
-const API_BASE="";
+﻿const API_BASE="/api";
 //  = "http://localhost:5170/api";
 const TOKEN_KEY = "studio_token";
 const USER_KEY = "studio_user";

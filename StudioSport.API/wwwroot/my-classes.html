@@ -252,7 +252,7 @@
   let res;
   try {
     const token = localStorage.getItem("studio_token");
-    res = await fetch("http://localhost:5170/api/subscriptions/my", {
+    res = await fetch(API_BASE + "/subscriptions/my", {
       headers: { Authorization: "Bearer " + token }
     });
   } catch (err) {
