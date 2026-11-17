@@ -12,17 +12,28 @@ using StudioSport.Data.Repositories;
 using StudioSport.Data.Seed;
 using StudioSport.Service.Mapping;
 using StudioSport.Service.Services;
-using Microsoft.Extensions.Configuration;
+
 var builder = WebApplication.CreateBuilder(args);
-builder.Configuration.AddUserSecrets<Program>(optional: true);
+
+// User Secrets only in Development - not in Production/Docker
+if (builder.Environment.IsDevelopment())
+{
+    builder.Configuration.AddUserSecrets<Program>(optional: true);
+}
 
 // --- NLog ---
 builder.Logging.ClearProviders();
 builder.Host.UseNLog();
 
 // --- DbContext ---
+var connectionString = builder.Configuration.GetConnectionString("Default");
+if (string.IsNullOrWhiteSpace(connectionString))
+{
+    throw new InvalidOperationException("ConnectionStrings:Default is not configured");
+}
+
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("Default")));
+    options.UseNpgsql(connectionString));
 
 // --- Repositories ---
 builder.Services.AddScoped<IClassRepository, ClassRepository>();
@@ -66,19 +77,22 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddAuthorization();
 
-// --- Controllers + Swagger ---
+// --- Controllers ---
 builder.Services.AddControllers();
 
 // --- CORS (client app) ---
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("ClientApp", policy =>
-        policy.WithOrigins("http://localhost:5500", "http://127.0.0.1:5500")
+        policy.WithOrigins(
+                "http://localhost:5500",
+                "http://127.0.0.1:5500",
+                "http://localhost:5170",
+                "https://studiosport.onrender.com")
               .AllowAnyHeader()
               .AllowAnyMethod()
               .WithExposedHeaders("X-Correlation-Id"));
 });
-
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
@@ -99,19 +113,23 @@ builder.Services.AddHostedService<ClassGenerationService>();
 
 var app = builder.Build();
 
-// --- Seed ---
+// --- Seed (does not crash the app if the DB is unreachable) ---
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    await StudioSport.Data.Seed.DbSeeder.SeedAsync(db);
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+    try
+    {
+        await DbSeeder.SeedAsync(db);
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Seed/migration failed. The app will start without seeding.");
+    }
 }
-// 1. CorrelationId - assign request id first, so errors carry it
+
 app.UseMiddleware<CorrelationIdMiddleware>();
-
-// 2. Exception handling - must wrap the whole pipeline
 app.UseMiddleware<ExceptionHandlingMiddleware>();
-
-// 3. CORS - before Authentication/Authorization
 app.UseCors("ClientApp");
 
 if (app.Environment.IsDevelopment())
@@ -124,7 +142,8 @@ if (!app.Environment.IsProduction())
 {
     app.UseHttpsRedirection();
 }
-app.UseAuthentication();   // before Authorization
+
+app.UseAuthentication();
 app.UseAuthorization();
 app.UseDefaultFiles();
 app.UseStaticFiles();

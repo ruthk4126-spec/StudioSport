@@ -145,7 +145,20 @@ const Api = {
   ,getPendingSubscriptions: () => apiRequest('/subscriptions/pending'),
   
 approveSubscription: (id) => apiRequest(`/subscriptions/${id}/approve`, { method: 'POST' }),
-};
+createClass(data) {
+    return apiRequest("/classes", {
+      method: "POST",
+      body: JSON.stringify(data)
+    });
+  },
+
+  cancelClass(id) {
+    return apiRequest(`/classes/${id}`, { method: "DELETE" });
+  },
+
+  getTrainers() {
+    return apiRequest("/trainers");
+  }};
 
 
 /* ---------- עזרי תצוגה ---------- */

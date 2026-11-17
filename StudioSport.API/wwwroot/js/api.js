@@ -215,3 +215,6 @@ function isActiveStatus(status) {
 function enrollmentClassId(e) {
   return e.classId ?? e.classSessionId ?? e.classSession?.id ?? null;
 } 
+Api.getTrainers = () => apiRequest("/trainers");
+Api.createClass = (payload) => apiRequest("/classes", { method: "POST", body: JSON.stringify(payload) });
+Api.cancelClass = (id) => apiRequest("/classes/" + id, { method: "DELETE" });

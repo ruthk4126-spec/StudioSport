@@ -80,9 +80,9 @@ public class ClassService : IClassService
             throw new NotFoundException($"מדריכה {dto.TrainerId} לא נמצאה");
 
         var entity = _mapper.Map<ClassSession>(dto);
+        entity.StartTime = DateTime.SpecifyKind(entity.StartTime, DateTimeKind.Utc);
         entity.EnrolledCount = 0;
         entity.IsCancelled = false;
-
         await _classes.AddAsync(entity, ct);
 
         _logger.LogInformation("Class {ClassId} created", entity.Id);

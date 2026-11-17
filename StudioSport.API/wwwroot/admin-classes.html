@@ -1,0 +1,229 @@
+﻿<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StudioSport - ניהול שיעורים</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <header class="topbar">
+    <div class="brand">Studio<span>Sport</span></div>
+    <div class="user-area">
+      <a href="classes.html" class="btn btn-ghost" style="padding:8px 18px;font-size:14px">שיעורים</a>
+      <a href="admin.html" class="btn btn-ghost" style="padding:8px 18px;font-size:14px">בקשות מנוי</a>
+      <span id="userName"></span>
+      <div class="avatar" id="userAvatar"></div>
+      <button class="btn btn-ghost" style="padding:8px 18px;font-size:14px" onclick="logout()">יציאה</button>
+    </div>
+  </header>
+
+  <main class="page">
+    <h1 class="page-title">ניהול שיעורים</h1>
+    <p class="page-sub">הוספת שיעור חדש וביטול שיעורים קיימים.</p>
+
+    <div id="pageAlert" class="alert"></div>
+
+    <div class="table-card" style="margin-bottom:28px">
+      <h2 style="margin:0 0 18px;font-size:20px">הוספת שיעור</h2>
+
+      <div class="field">
+        <label for="fName">שם השיעור</label>
+        <input id="fName" type="text" maxlength="100" placeholder="לדוגמה: יוגה - צהריים">
+      </div>
+
+      <div class="field">
+        <label for="fStart">תאריך ושעה</label>
+        <input id="fStart" type="datetime-local">
+      </div>
+
+      <div class="field">
+        <label for="fCapacity">קיבולת (1-60)</label>
+        <input id="fCapacity" type="number" min="1" max="60" value="10">
+      </div>
+
+      <div class="field">
+        <label for="fTrainer">מדריכה</label>
+        <select id="fTrainer"></select>
+      </div>
+
+      <div class="field">
+        <label for="fNotes">הערות / ציוד</label>
+        <input id="fNotes" type="text" maxlength="500" placeholder="לדוגמה: להביא מזרן אישי">
+      </div>
+
+      <div class="form-actions">
+        <button class="btn btn-primary" id="btnCreate" onclick="createClass()">הוספת שיעור</button>
+      </div>
+    </div>
+
+    <div class="stats">
+      <div class="stat-card">
+        <div class="stat-value" id="statTotal">-</div>
+        <div class="stat-label">שיעורים פעילים</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="statCancelled">-</div>
+        <div class="stat-label">שיעורים מבוטלים</div>
+      </div>
+    </div>
+
+    <div class="table-card">
+      <table>
+        <thead>
+          <tr>
+            <th>שיעור</th>
+            <th>מדריכה</th>
+            <th>מועד</th>
+            <th>נרשמות</th>
+            <th>סטטוס</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="classesBody">
+          <tr><td colspan="6" class="empty-state">טוען...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+
+  <script src="js/api.js"></script>
+  <script>
+    requireAuth();
+
+    const currentUser = getUser();
+    if (!currentUser || currentUser.role !== "Admin") {
+      window.location.href = "classes.html";
+    }
+    renderUserArea();
+
+    let trainers = [];
+
+    async function loadTrainers() {
+      const res = await Api.getTrainers();
+      trainers = asArray(res.data);
+      const sel = document.getElementById("fTrainer");
+      sel.innerHTML = trainers
+        .map(t => `<option value="${t.id}">${escapeHtml(t.name)}</option>`)
+        .join("");
+    }
+
+    async function loadClasses() {
+      const res = await Api.getClasses();
+      if (!res.ok) {
+        showAlert("pageAlert", res.data?.message || "לא ניתן לטעון שיעורים", "error");
+        return;
+      }
+
+      const all = asArray(res.data);
+      const active = all.filter(c => !c.isCancelled);
+      document.getElementById("statTotal").textContent = active.length;
+      document.getElementById("statCancelled").textContent = all.length - active.length;
+
+      const body = document.getElementById("classesBody");
+
+      if (!all.length) {
+        body.innerHTML = '<tr><td colspan="6" class="empty-state">אין שיעורים</td></tr>';
+        return;
+      }
+
+      body.innerHTML = all.map(c => {
+        const full = c.availableSpots === 0;
+        const badge = c.isCancelled
+          ? '<span class="badge badge-muted">מבוטל</span>'
+          : full
+            ? '<span class="badge badge-full">מלא</span>'
+            : '<span class="badge badge-free">פנוי</span>';
+
+        const action = c.isCancelled
+          ? ""
+          : `<button class="btn btn-danger" style="font-size:14px;padding:8px 18px"
+                     onclick="cancelClass(${c.id}, this)">ביטול</button>`;
+
+        return `
+          <tr>
+            <td>
+              <span class="class-name">${escapeHtml(c.name)}</span>
+              ${c.equipmentNotes ? `<span class="class-note">${escapeHtml(c.equipmentNotes)}</span>` : ""}
+            </td>
+            <td>${escapeHtml(c.trainerName || "-")}</td>
+            <td>${formatDate(c.startTime)}</td>
+            <td>${c.enrolledCount} / ${c.capacity}</td>
+            <td>${badge}</td>
+            <td style="text-align:left">${action}</td>
+          </tr>`;
+      }).join("");
+    }
+
+    async function createClass() {
+      hideAlert("pageAlert");
+
+      const name = document.getElementById("fName").value.trim();
+      const start = document.getElementById("fStart").value;
+      const capacity = parseInt(document.getElementById("fCapacity").value, 10);
+      const trainerId = parseInt(document.getElementById("fTrainer").value, 10);
+      const notes = document.getElementById("fNotes").value.trim();
+
+      if (!name) return showAlert("pageAlert", "יש למלא שם שיעור", "error");
+      if (!start) return showAlert("pageAlert", "יש לבחור תאריך ושעה", "error");
+      if (!capacity || capacity < 1 || capacity > 60)
+        return showAlert("pageAlert", "הקיבולת חייבת להיות בין 1 ל-60", "error");
+      if (!trainerId) return showAlert("pageAlert", "יש לבחור מדריכה", "error");
+
+      const btn = document.getElementById("btnCreate");
+      btn.disabled = true;
+      btn.textContent = "מוסיף...";
+
+      const res = await Api.createClass({
+        name: name,
+        startTime: start,
+        capacity: capacity,
+        trainerId: trainerId,
+        equipmentNotes: notes || null
+      });
+
+      btn.disabled = false;
+      btn.textContent = "הוספת שיעור";
+
+      if (!res.ok) {
+        showAlert("pageAlert", res.data?.message || "לא ניתן להוסיף את השיעור", "error");
+        return;
+      }
+
+      showAlert("pageAlert", "השיעור נוסף בהצלחה.", "success");
+      document.getElementById("fName").value = "";
+      document.getElementById("fStart").value = "";
+      document.getElementById("fNotes").value = "";
+      await loadClasses();
+    }
+
+    async function cancelClass(id, btn) {
+      if (!confirm("לבטל את השיעור? הפעולה אינה ניתנת לביטול.")) return;
+
+      btn.disabled = true;
+      btn.textContent = "מבטל...";
+
+      const res = await Api.cancelClass(id);
+
+      if (!res.ok) {
+        btn.disabled = false;
+        btn.textContent = "ביטול";
+        showAlert("pageAlert", res.data?.message || "לא ניתן לבטל את השיעור", "error");
+        return;
+      }
+
+      showAlert("pageAlert", "השיעור בוטל.", "success");
+      await loadClasses();
+    }
+
+    (async function init() {
+      await loadTrainers();
+      await loadClasses();
+    })();
+  </script>
+</body>
+</html>
