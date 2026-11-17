@@ -40,16 +40,15 @@ public class ClassService : IClassService
     public async Task<ClassStatsDto> GetStatsAsync(int days, CancellationToken ct)
     {
         var now = DateTime.UtcNow;
-        var until = now.AddDays(days);
-
         var q = _db.ClassSessions
             .AsNoTracking()
-            .Where(c => !c.IsCancelled && c.StartTime > now && c.StartTime <= until);
+            .Where(c => !c.IsCancelled && c.StartTime >= now);
 
-        var total = await q.CountAsync(ct);
-        var free = await q.SumAsync(c => c.Capacity - c.EnrolledCount, ct);
-
-        return new ClassStatsDto { Total = total, Free = free };
+        return new ClassStatsDto
+        {
+            Total = await q.CountAsync(ct),
+            Free = await q.SumAsync(c => c.Capacity - c.EnrolledCount, ct)
+        };
     }
     public async Task<PagedResult<ClassResponseDto>> GetPagedAsync(ClassQueryParameters query, CancellationToken ct)
     {

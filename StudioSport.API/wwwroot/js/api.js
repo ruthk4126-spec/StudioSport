@@ -1,4 +1,4 @@
-﻿const API_BASE="/api";
+const API_BASE="";
 //  = "http://localhost:5170/api";
 const TOKEN_KEY = "studio_token";
 const USER_KEY = "studio_user";
@@ -145,7 +145,20 @@ const Api = {
   ,getPendingSubscriptions: () => apiRequest('/subscriptions/pending'),
   
 approveSubscription: (id) => apiRequest(`/subscriptions/${id}/approve`, { method: 'POST' }),
-};
+createClass(data) {
+    return apiRequest("/classes", {
+      method: "POST",
+      body: JSON.stringify(data)
+    });
+  },
+
+  cancelClass(id) {
+    return apiRequest(`/classes/${id}`, { method: "DELETE" });
+  },
+
+  getTrainers() {
+    return apiRequest("/trainers");
+  }};
 
 
 /* ---------- עזרי תצוגה ---------- */
@@ -170,7 +183,11 @@ function renderUserArea() {
   if (nameEl) nameEl.textContent = user.username || "אורח";
   if (avatarEl) avatarEl.textContent = (user.username || "?").charAt(0).toUpperCase();
 }
-
+(function showAdminLink() {
+  const u = getUser && getUser();
+  const el = document.getElementById("navAdminClasses");
+  if (el && u && u.role === "Admin") el.style.display = "inline-flex";
+})();
 function logout() {
   clearSession();
   window.location.href = "login.html";
@@ -215,6 +232,3 @@ function isActiveStatus(status) {
 function enrollmentClassId(e) {
   return e.classId ?? e.classSessionId ?? e.classSession?.id ?? null;
 } 
-Api.getTrainers = () => apiRequest("/trainers");
-Api.createClass = (payload) => apiRequest("/classes", { method: "POST", body: JSON.stringify(payload) });
-Api.cancelClass = (id) => apiRequest("/classes/" + id, { method: "DELETE" });

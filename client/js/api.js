@@ -183,7 +183,11 @@ function renderUserArea() {
   if (nameEl) nameEl.textContent = user.username || "אורח";
   if (avatarEl) avatarEl.textContent = (user.username || "?").charAt(0).toUpperCase();
 }
-
+(function showAdminLink() {
+  const u = getUser && getUser();
+  const el = document.getElementById("navAdminClasses");
+  if (el && u && u.role === "Admin") el.style.display = "inline-flex";
+})();
 function logout() {
   clearSession();
   window.location.href = "login.html";
