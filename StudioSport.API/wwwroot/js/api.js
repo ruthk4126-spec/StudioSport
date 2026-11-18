@@ -1,9 +1,9 @@
-const API_BASE="";
+﻿const API_BASE="/api";
 //  = "http://localhost:5170/api";
 const TOKEN_KEY = "studio_token";
 const USER_KEY = "studio_user";
 
-/* ---------- ניהול טוקן ---------- */
+/* ---------- ׳ ׳™׳”׳•׳ ׳˜׳•׳§׳ ---------- */
 
 function saveSession(token, user) {
   localStorage.setItem(TOKEN_KEY, token);
@@ -33,7 +33,7 @@ function requireAuth() {
   }
 }
 
-/* ---------- קריאה כללית ---------- */
+/* ---------- ׳§׳¨׳™׳׳” ׳›׳׳׳™׳× ---------- */
 
 async function apiRequest(path, options = {}) {
   const headers = {
@@ -52,7 +52,7 @@ async function apiRequest(path, options = {}) {
   if (response.status === 401) {
     clearSession();
     window.location.href = "login.html";
-    throw new Error("פג תוקף ההתחברות");
+    throw new Error("׳₪׳’ ׳×׳•׳§׳£ ׳”׳”׳×׳—׳‘׳¨׳•׳×");
   }
 
   let data = null;
@@ -73,7 +73,7 @@ async function apiRequest(path, options = {}) {
   };
 }
 
-/* ---------- שירותים ---------- */
+/* ---------- ׳©׳™׳¨׳•׳×׳™׳ ---------- */
 
 const Api = {
   login(username, password) {
@@ -161,7 +161,7 @@ createClass(data) {
   }};
 
 
-/* ---------- עזרי תצוגה ---------- */
+/* ---------- ׳¢׳–׳¨׳™ ׳×׳¦׳•׳’׳” ---------- */
 
 function formatDate(iso) {
   if (!iso) return "";
@@ -170,7 +170,7 @@ function formatDate(iso) {
     day: "2-digit",
     month: "2-digit",
     year: "numeric"
-  }) + " · " + d.toLocaleTimeString("he-IL", {
+  }) + " ֲ· " + d.toLocaleTimeString("he-IL", {
     hour: "2-digit",
     minute: "2-digit"
   });
@@ -180,7 +180,7 @@ function renderUserArea() {
   const user = getUser();
   const nameEl = document.getElementById("userName");
   const avatarEl = document.getElementById("userAvatar");
-  if (nameEl) nameEl.textContent = user.username || "אורח";
+  if (nameEl) nameEl.textContent = user.username || "׳׳•׳¨׳—";
   if (avatarEl) avatarEl.textContent = (user.username || "?").charAt(0).toUpperCase();
 }
 (function showAdminLink() {
@@ -193,7 +193,7 @@ function logout() {
   window.location.href = "login.html";
 }
 
-/* ---------- הודעות ---------- */
+/* ---------- ׳”׳•׳“׳¢׳•׳× ---------- */
 
 function showAlert(elementId, message, type) {
   const el = document.getElementById(elementId);
@@ -213,9 +213,9 @@ function escapeHtml(str) {
   }[ch]));
 }
 
-/* ---------- נרמול תשובות מהשרת ---------- */
+/* ---------- ׳ ׳¨׳׳•׳ ׳×׳©׳•׳‘׳•׳× ׳׳”׳©׳¨׳× ---------- */
 
-// השרת עשוי להחזיר מערך ישירות, או עטיפה: { items: [...] } / { data: [...] }
+// ׳”׳©׳¨׳× ׳¢׳©׳•׳™ ׳׳”׳—׳–׳™׳¨ ׳׳¢׳¨׳ ׳™׳©׳™׳¨׳•׳×, ׳׳• ׳¢׳˜׳™׳₪׳”: { items: [...] } / { data: [...] }
 function asArray(payload) {
   if (Array.isArray(payload)) return payload;
   if (payload && Array.isArray(payload.items)) return payload.items;
@@ -223,12 +223,12 @@ function asArray(payload) {
   return [];
 }
 
-// ה-enum נשלח כמחרוזת ("Active") או כמספר (0)
+// ׳”-enum ׳ ׳©׳׳— ׳›׳׳—׳¨׳•׳–׳× ("Active") ׳׳• ׳›׳׳¡׳₪׳¨ (0)
 function isActiveStatus(status) {
   return status === "Active" || status === 0;
 }
 
-// שם השדה עשוי להיות classId או classSessionId
+// ׳©׳ ׳”׳©׳“׳” ׳¢׳©׳•׳™ ׳׳”׳™׳•׳× classId ׳׳• classSessionId
 function enrollmentClassId(e) {
   return e.classId ?? e.classSessionId ?? e.classSession?.id ?? null;
 } 
