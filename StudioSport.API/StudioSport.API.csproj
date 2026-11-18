@@ -24,5 +24,4 @@
     <ProjectReference Include="..\StudioSport.Service\StudioSport.Service.csproj" />
     <ProjectReference Include="..\StudioSport.Data\StudioSport.Data.csproj" />
   </ItemGroup>
-
 </Project>
