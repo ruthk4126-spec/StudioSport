@@ -5,6 +5,10 @@ using Xunit;
 
 namespace StudioSport.Tests.Integration;
 
+/// בדיקות אינטגרציה שדורשות בסיס נתונים אמיתי.
+/// מריצים אותן כך (דוגמה ל-PostgreSQL מקומי):
+///   STUDIO_TEST_DB="Host=localhost;Database=StudioSportTest;Username=postgres;Password=..." dotnet test
+/// בהיעדר המשתנה הן מדווחות Skip — ולא "עוברות" בלי לבדוק כלום.
 public class EnrollmentConcurrencyTests
 {
     private static string? ConnectionString =>
@@ -15,11 +19,12 @@ public class EnrollmentConcurrencyTests
             .UseNpgsql(ConnectionString)
             .Options);
 
-    [Fact]
+    [SkippableFact]
     public async Task TwoContexts_SameEntity_SecondThrowsConcurrencyException()
     {
-        if (string.IsNullOrWhiteSpace(ConnectionString))
-            return;
+        Skip.If(string.IsNullOrWhiteSpace(ConnectionString),
+            "חסר משתנה הסביבה STUDIO_TEST_DB — הבדיקה דורשת בסיס נתונים אמיתי.");
+
         int classId, trainerId;
 
         // Arrange
@@ -64,6 +69,60 @@ public class EnrollmentConcurrencyTests
 
             await Assert.ThrowsAsync<DbUpdateConcurrencyException>(
                 () => ctx2.SaveChangesAsync());   // השני נופל
+        }
+        finally
+        {
+            await using var cleanup = CreateContext();
+            await cleanup.ClassSessions.Where(c => c.Id == classId).ExecuteDeleteAsync();
+            await cleanup.Trainers.Where(t => t.Id == trainerId).ExecuteDeleteAsync();
+        }
+    }
+
+    /// ההוכחה שלא נשאר מקום "כפול": על שיעור בקיבולת 1, ניסיון תפיסה שני
+    /// (אחרי שהראשון הצליח) מוחזר false, והמונה לא עולה מעל הקיבולת.
+    [SkippableFact]
+    public async Task ReserveSpot_SecondAttemptOnFullClass_ReturnsFalseAndKeepsCount()
+    {
+        Skip.If(string.IsNullOrWhiteSpace(ConnectionString),
+            "חסר משתנה הסביבה STUDIO_TEST_DB — הבדיקה דורשת בסיס נתונים אמיתי.");
+
+        int classId, trainerId;
+
+        await using (var setup = CreateContext())
+        {
+            var trainer = new Trainer { Name = "מאמנת בדיקה" };
+            setup.Trainers.Add(trainer);
+            await setup.SaveChangesAsync();
+            trainerId = trainer.Id;
+
+            var session = new ClassSession
+            {
+                Name = "שיעור בקיבולת אחת",
+                StartTime = DateTime.UtcNow.AddDays(30),
+                Capacity = 1,
+                EnrolledCount = 0,
+                TrainerId = trainerId,
+                Version = Guid.NewGuid()
+            };
+            setup.ClassSessions.Add(session);
+            await setup.SaveChangesAsync();
+            classId = session.Id;
+        }
+
+        try
+        {
+            var repo1 = new StudioSport.Data.Repositories.ClassRepository(CreateContext());
+            var repo2 = new StudioSport.Data.Repositories.ClassRepository(CreateContext());
+
+            var first = await repo1.TryReserveSpotAsync(classId, CancellationToken.None);
+            var second = await repo2.TryReserveSpotAsync(classId, CancellationToken.None);
+
+            Assert.True(first, "המקום הראשון אמור להיתפס");
+            Assert.False(second, "המקום השני לא אמור להיתפס — הקיבולת 1");
+
+            await using var check = CreateContext();
+            var final = await check.ClassSessions.AsNoTracking().FirstAsync(c => c.Id == classId);
+            Assert.Equal(1, final.EnrolledCount);
         }
         finally
         {

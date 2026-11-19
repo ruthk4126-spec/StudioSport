@@ -174,9 +174,15 @@ dotnet test
 | סוג | קובץ | מה נבדק |
 |---|---|---|
 | יחידה (xUnit + Moq) | `Services/EnrollmentServiceTests.cs` | הרשמה תקינה, שיעור מלא (409), שיעור לא קיים, שיעור מבוטל, שיעור שהחל, אין מנוי, אין יתרת שיעורים, הרשמה כפולה, מכסה יומית, ביטול הרשמה, ביטול בידי מי שאינו הבעלים |
-| אינטגרציה | `Integration/EnrollmentConcurrencyTests.cs` | שני `DbContext` נפרדים — הראשון שומר, השני מקבל `DbUpdateConcurrencyException` |
+| אינטגרציה | `Integration/EnrollmentConcurrencyTests.cs` | שני `DbContext` נפרדים — הראשון שומר, השני מקבל `DbUpdateConcurrencyException`; ותפיסת מקום שנייה על שיעור בקיבולת 1 מוחזרת `false` והמונה נשאר 1 |
 
-בדיקות התחרות דורשות משתנה סביבה `STUDIO_TEST_DB` עם מחרוזת חיבור לבסיס נתונים אמיתי. ללא המשתנה הן מדולגות.
+בדיקות התחרות דורשות משתנה סביבה `STUDIO_TEST_DB` עם מחרוזת חיבור לבסיס נתונים אמיתי:
+
+```bash
+STUDIO_TEST_DB="Host=localhost;Database=StudioSportTest;Username=postgres;Password=***" dotnet test
+```
+
+ללא המשתנה שתי הבדיקות מדווחות **Skipped** — הן אינן עוברות "על ריק".
 
 בדיקות היחידה אינן נוגעות בבסיס נתונים — כולן עם repositories מדומים.
 
