@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StudioSport — סטודיו כושר</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .hero {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 90px 40px 70px;
+    }
+
+    .hero h1 {
+      font-size: 62px;
+      font-weight: 900;
+      letter-spacing: -2px;
+      line-height: 1.05;
+      margin-bottom: 22px;
+    }
+
+    .hero h1 em {
+      color: var(--lime);
+      font-style: normal;
+    }
+
+    .hero p.lead {
+      font-size: 21px;
+      color: var(--white-dim);
+      margin-bottom: 38px;
+      max-width: 620px;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 18px;
+      margin-top: 70px;
+    }
+
+    .feature {
+      background: var(--bg-deep);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: var(--radius);
+      padding: 30px 26px;
+    }
+
+    .feature h3 {
+      font-size: 19px;
+      font-weight: 800;
+      margin-bottom: 10px;
+      color: var(--lime);
+    }
+
+    .feature p {
+      color: var(--white-dim);
+      font-size: 15px;
+    }
+
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 22px;
+      margin-top: 30px;
+    }
+
+    .step-num {
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
+      background: var(--lime);
+      color: #0A0C0A;
+      display: grid;
+      place-items: center;
+      font-weight: 900;
+      font-size: 19px;
+      margin-bottom: 16px;
+    }
+
+    .mini-card {
+      background: var(--bg-deep);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 22px;
+    }
+
+    .mini-card .name {
+      font-weight: 800;
+      font-size: 17px;
+      margin-bottom: 8px;
+    }
+
+    .mini-card .meta {
+      font-size: 14px;
+      color: var(--white-dim);
+      line-height: 1.9;
+    }
+
+    .preview-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 18px;
+    }
+
+    @media (max-width: 760px) {
+      .hero {
+        padding: 50px 18px 40px;
+      }
+
+      .hero h1 {
+        font-size: 38px;
+        letter-spacing: -1px;
+      }
+
+      .hero p.lead {
+        font-size: 17px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <header class="topbar">
+    <div class="brand">Studio<span>Sport</span></div>
+    <div class="user-area">
+      <a href="admin-classes.html" id="navAdminClasses" class="btn btn-ghost"
+   style="padding:8px 18px;font-size:14px;display:none">ניהול שיעורים</a>
+      <a href="login.html" class="btn btn-primary" style="padding:9px 22px;font-size:14px">כניסה</a>
+    </div>
+  </header>
+
+  <section class="hero">
+    <h1>כוח, פילאטיס וכושר.<br><em>בקבוצות קטנות.</em></h1>
+    <p class="lead">שיעורים בקבוצות קטנות עם מקום לכל אחת. נרשמות אונליין, רואות בדיוק כמה מקומות נשארו, ומגיעות מוכנות.
+    </p>
+    <div class="hero-actions">
+      <a href="login.html" class="btn btn-primary">התחברות / הרשמה</a>
+      <a href="login.html" class="btn btn-ghost">לשיעורים הקרובים</a>
+    </div>
+
+    <div class="feature-grid">
+      <div class="feature">
+        <h3>קבוצות קטנות</h3>
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24">
+            <path d="M4 9v6" />
+            <path d="M7 7v10" />
+            <path d="M17 7v10" />
+            <path d="M20 9v6" />
+            <path d="M7 12h10" />
+          </svg>
+        </div>
+        <p>כל שיעור בקיבולת מוגבלת, כך שיש מקום לתשומת לב אישית.</p>
+      </div>
+      <div class="feature">
+        <h3>מקומות בזמן אמת</h3>
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="9" />
+            <path d="M12 7v5l3 2" />
+          </svg>
+        </div>
+        <p>רואות כמה מקומות פנויים בכל שיעור, לפני שמנסות להירשם.</p>
+      </div>
+      <div class="feature">
+        <h3>ביטול פשוט</h3>
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24">
+            <rect x="3" y="5" width="18" height="16" rx="2" />
+            <path d="M8 3v4" />
+            <path d="M16 3v4" />
+            <path d="M3 10h18" />
+            <path d="M9 15l2 2 4-4" />
+          </svg>
+        </div>
+        <p>ההרשמות שלך מרוכזות במקום אחד, עם אפשרות ביטול.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="page" style="padding-top:0">
+    <h2 class="page-title" style="font-size:30px">שיעורים קרובים</h2>
+    <p class="page-sub">התחברי כדי להירשם</p>
+
+    <div class="preview-grid" id="previewGrid">
+      <div class="mini-card"><span class="meta">טוען...</span></div>
+    </div>
+  </section>
+
+  <section class="page" style="padding-top:0">
+    <h2 class="page-title" style="font-size:30px">איך זה עובד</h2>
+    <div class="steps">
+      <div>
+        <div class="step-num">1</div>
+        <h3 style="font-size:18px;margin-bottom:8px">נרשמות</h3>
+        <p style="color:var(--white-dim);font-size:15px">פותחות חשבון בכמה שניות.</p>
+      </div>
+      <div>
+        <div class="step-num">2</div>
+        <h3 style="font-size:18px;margin-bottom:8px">בוחרות שיעור</h3>
+        <p style="color:var(--white-dim);font-size:15px">רואות מועד, מדריכה ומקומות פנויים.</p>
+      </div>
+      <div>
+        <div class="step-num">3</div>
+        <h3 style="font-size:18px;margin-bottom:8px">מגיעות מוכנות</h3>
+        <p style="color:var(--white-dim);font-size:15px">המערכת מציגה מה להביא לשיעור.</p>
+      </div>
+    </div>
+  </section>
+  <!-- חלון אישור ביטול
+  <div class="modal-backdrop" id="cancelModal">
+    <div class="modal">
+      <h2>ביטול הרשמה</h2>
+      <p id="cancelClassInfo"></p>
+      <p style="color:#bbb;font-size:14px;margin-top:8px">
+        המקום ישוחרר ולא ניתן יהיה לשחזרו. להמשיך?
+      </p>
+      <div style="display:flex;gap:10px;margin-top:20px">
+        <button class="btn btn-ghost" style="flex:1" onclick="closeCancel()">חזרה</button>
+        <button class="btn btn-primary" id="cancelConfirmBtn" style="flex:1" onclick="confirmCancel()">
+          בטלי את ההרשמה
+        </button>
+      </div>
+    </div>
+  </div> -->
+  <script src="js/api.js"></script>
+  <script>
+    // אם כבר מחוברת — ישר לשיעורים
+    // if (getToken()) window.location.href = "classes.html";
+
+    async function loadPreview() {
+      const grid = document.getElementById("previewGrid");
+      try {
+        const res = await Api.getClasses();
+        if (!res.ok) {
+          grid.innerHTML = '<div class="mini-card"><span class="meta">לא ניתן לטעון שיעורים</span></div>';
+          return;
+        }
+
+        const items = (res.data.items || []).slice(0, 4);
+        if (!items.length) {
+          grid.innerHTML = '<div class="mini-card"><span class="meta">אין שיעורים פתוחים כרגע</span></div>';
+          return;
+        }
+
+        grid.innerHTML = items.map(c => `
+          <div class="mini-card">
+            <div class="name">${escapeHtml(c.name)}</div>
+            <div class="meta">
+              מדריכה: ${escapeHtml(c.trainerName || "")}<br>
+              ${formatDate(c.startTime)}<br>
+              ${c.availableSpots > 0
+            ? `<span class="badge badge-free">${c.availableSpots} מקומות פנויים</span>`
+            : '<span class="badge badge-full">מלא</span>'}
+            </div>
+          </div>
+        `).join("");
+      } catch (err) {
+        console.error("loadPreview failed:", err);
+        grid.innerHTML = '<div class="mini-card"><span class="meta">לא ניתן לטעון שיעורים</span></div>';
+      }
+    }
+
+    loadPreview();
+  </script>
+</body>
+
+</html>

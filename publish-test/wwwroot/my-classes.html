@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StudioSport — השיעורים שלי</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+  #cancelModal {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: rgba(0, 0, 0, 0.75);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    box-sizing: border-box;
+    direction: rtl;
+  }
+
+  #cancelModal[hidden] { display: none !important; }
+
+  #cancelModal .modal-box {
+    background: #101410;
+    border: 2px solid #b7f34d;
+    border-radius: 16px;
+    padding: 24px;
+    width: 100%;
+    max-width: 400px;
+    box-sizing: border-box;
+    text-align: right;
+    color: #eee;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+  }
+
+  #cancelModal .modal-box h3 {
+    margin: 0 0 12px;
+    font-size: 1.15rem;
+    color: #b7f34d;
+  }
+
+  #cancelModal .modal-box p {
+    margin: 0 0 8px;
+    line-height: 1.6;
+    font-size: 0.95rem;
+  }
+
+  #cancelModal .modal-warn {
+    color: #e0a63c;
+    font-size: 0.88rem;
+  }
+
+  #cancelModal .modal-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 18px;
+  }
+
+  #cancelModal .modal-actions button {
+    flex: 1;
+    padding: 10px 14px;
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: 0.95rem;
+    cursor: pointer;
+  }
+
+  #cancelModal .btn-danger {
+    background: #c0392b;
+    border: 1px solid #c0392b;
+    color: #fff;
+  }
+
+  #cancelModal .btn-ghost {
+    background: transparent;
+    border: 1px solid #444;
+    color: #ccc;
+  }
+</style>
+</head>
+
+<body>
+
+  <header class="topbar">
+    <div class="brand">Studio<span>Sport</span></div>
+   <div class="user-area">
+    <a href="admin-classes.html" id="navAdminClasses" class="btn btn-ghost"
+   style="padding:8px 18px;font-size:14px;display:none">ניהול שיעורים</a>
+      <a href="classes.html" class="btn btn-ghost" style="padding:8px 18px;font-size:14px">שיעורים זמינים</a>
+      <button type="button" class="btn btn-primary" id="subscribeBtn" style="padding:8px 18px;font-size:14px" onclick="location.href='subscribe.html'">הרשמה למנוי</button>
+      <span id="userName"></span>
+      <div class="avatar" id="userAvatar"></div>
+      <button class="btn btn-ghost" style="padding:8px 18px;font-size:14px" onclick="logout()">יציאה</button>
+    </div>
+  </header>
+
+  <main class="page">
+    <h1 class="page-title">השיעורים שלי</h1>
+    <p class="page-sub">השיעורים שנרשמת אליהם, והשיעורים שכבר היית בהם.</p>
+
+    <div id="pageAlert" class="alert"></div>
+
+    <div class="stats" id="statsRow">
+      <div class="stat-card">
+        <div class="stat-value" id="statActive">—</div>
+        <div class="stat-label">שיעורים קרובים</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="statHistory">—</div>
+        <div class="stat-label">שיעורים שהיו</div>
+      </div>
+       <div class="stat-card">
+        <div class="stat-value" id="statRemaining">—</div>
+        <div class="stat-label">שיעורים שנותרו</div>
+      </div>
+    </div>
+
+    <!-- שיעורים קרובים -->
+    <div class="table-card" style="margin-bottom:24px">
+      <h2 class="section-title" style="padding:18px 20px 0;font-size:18px">שיעורים קרובים</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>שיעור</th>
+            <th>מדריך</th>
+            <th>מועד</th>
+            <th>סטטוס</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="activeBody">
+          <tr>
+            <td colspan="5" class="empty-state">טוען...</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- היסטוריה -->
+    <div class="table-card">
+      <h2 class="section-title" style="padding:18px 20px 0;font-size:18px">שיעורים שהיו</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>שיעור</th>
+            <th>מועד</th>
+            <th>סטטוס</th>
+            <th>משוב</th>
+          </tr>
+        </thead>
+        <tbody id="historyBody">
+          <tr>
+            <td colspan="4" class="empty-state">טוען...</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+
+  <!-- חלונית משוב -->
+  <div class="modal-backdrop" id="feedbackModal">
+    <div class="modal">
+      <h2>איך היה השיעור?</h2>
+      <p id="feedbackClassInfo"></p>
+
+      <label style="display:block;margin:16px 0 6px">דירוג</label>
+      <div id="ratingRow" style="display:flex;gap:8px;justify-content:center;margin-bottom:16px"></div>
+
+      <label style="display:block;margin:0 0 6px">הערה (לא חובה)</label>
+      <textarea id="feedbackComment" rows="3"
+        style="width:100%;box-sizing:border-box;padding:10px;border-radius:10px;border:1px solid #333;background:#111;color:#eee;font-family:inherit"></textarea>
+
+      <div style="display:flex;gap:10px;margin-top:16px">
+        <button class="btn btn-primary" style="flex:1" onclick="submitFeedback()">שליחה</button>
+        <button class="btn btn-ghost" style="flex:1" onclick="closeFeedback()">ביטול</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- חלון ביטול הרשמה -->
+  <div id="cancelModal" class="modal-overlay" hidden>
+    <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="cancelTitle">
+      <h3 id="cancelTitle">ביטול הרשמה</h3>
+      <p id="cancelClassInfo"></p>
+      <p class="modal-warn">הפעולה אינה ניתנת לביטול. לבטל בכל זאת?</p>
+      <div class="modal-actions">
+        <button id="cancelConfirmBtn" type="button" class="btn-danger">כן, לבטל</button>
+        <button id="cancelCloseBtn" type="button" class="btn-ghost" onclick="closeCancel()">חזרה</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script>
+    requireAuth();
+    renderUserArea();
+
+    const MAX_ROWS = 20;
+
+    let activeList = [];
+    let historyList = [];
+    let currentEnrollmentId = null;
+    let currentRating = 0;
+
+    /* ---------- נרמול תשובות ---------- */
+
+    function asArray(payload) {
+      if (Array.isArray(payload)) return payload;
+      if (payload && Array.isArray(payload.items)) return payload.items;
+      if (payload && Array.isArray(payload.data)) return payload.data;
+      return [];
+    }
+
+    async function loadPage() {
+      hideAlert("pageAlert");
+
+      let res;
+
+      try {
+        res = await Api.getMyEnrollments();
+      } catch (err) {
+        console.error(err);
+        showAlert("pageAlert", "לא ניתן להתחבר לשרת. ודאי שהוא פועל.", "error");
+        renderEmpty();
+        return;
+      }
+
+      if (!res.ok || !res.data) {
+        showAlert("pageAlert", "לא ניתן לטעון את השיעורים שלי", "error");
+        renderEmpty();
+        return;
+      }
+
+      // השרת מחזיר { active, history }
+      activeList = asArray(res.data.active).slice(0, MAX_ROWS);
+      historyList = asArray(res.data.history).slice(0, MAX_ROWS);
+
+      document.getElementById("statActive").textContent = activeList.length;
+      document.getElementById("statHistory").textContent = historyList.length;
+      loadSubscription();
+
+      renderActive();
+      renderHistory();
+    }
+    async function loadSubscription() {
+  const el = document.getElementById("statRemaining");
+  if (!el) return;
+
+  let res;
+  try {
+    const token = localStorage.getItem("studio_token");
+    res = await fetch(API_BASE + "/subscriptions/my", {
+      headers: { Authorization: "Bearer " + token }
+    });
+  } catch (err) {
+    console.error("שגיאה בטעינת המנוי:", err);
+    el.textContent = "—";
+    return;
+  }
+
+  // אין מנוי — מפנים לבחירת מנוי
+  if (!res.ok) {
+    window.location.href = "subscribe.html";
+    return;
+  }
+
+  const sub = await res.json();
+  const status = sub.status ?? sub.Status;
+ const isActive = status === "Active" || status === 0;
+  if (!isActive) {
+    window.location.href = "subscribe.html";
+    return;
+  }
+
+  const remaining = sub.remainingClasses ?? sub.RemainingClasses ?? 0;
+  const total = sub.totalClasses ?? sub.TotalClasses ?? 0;
+
+  el.textContent = remaining;
+  el.title = "מתוך " + total + " שיעורים בחבילה";
+}
+     function renderEmpty() {
+      activeList = [];
+      historyList = [];
+      document.getElementById("statActive").textContent = "—";
+      document.getElementById("statHistory").textContent = "—";
+      document.getElementById("statRemaining").textContent = "—";
+      renderActive();
+     }
+
+    /* ---------- שיעורים קרובים ---------- */
+
+    function renderActive() {
+      const body = document.getElementById("activeBody");
+
+      if (!activeList.length) {
+        body.innerHTML =
+          '<tr><td colspan="5" class="empty-state">אין שיעורים קרובים. אפשר להירשם לשיעור חדש מדף השיעורים.</td></tr>';
+        return;
+      }
+
+      body.innerHTML = activeList.map(e => `
+        <tr>
+          <td>
+            <span class="class-name">${escapeHtml(e.className)}</span>
+            <span class="class-note">${escapeHtml(e.equipmentNotes || "")}</span>
+          </td>
+          <td>${escapeHtml(e.trainerName || "")}</td>
+          <td>${formatDate(e.startTime)}</td>
+          <td><span class="badge badge-free">רשומה</span></td>
+          <td style="text-align:left">
+            <button class="btn btn-ghost" style="font-size:14px;padding:9px 18px"
+                    onclick="openCancel(${e.id}, '${escapeHtml(e.className || "").replace(/'/g, "\\'")}')">ביטול הרשמה</button>
+          </td>
+        </tr>`).join("");
+    }
+
+    /* ---------- היסטוריה ---------- */
+
+    function renderHistory() {
+      const body = document.getElementById("historyBody");
+
+      if (!historyList.length) {
+        body.innerHTML =
+          '<tr><td colspan="4" class="empty-state">עוד לא היו שיעורים. ההיסטוריה תופיע אחרי השיעור הראשון.</td></tr>';
+        return;
+      }
+
+      body.innerHTML = historyList.map(e => {
+        const cancelled = String(e.status) === "Cancelled";
+        const badge = cancelled
+          ? '<span class="badge badge-muted">בוטל</span>'
+          : '<span class="badge badge-free">התקיים</span>';
+
+        // משוב אפשרי רק על שיעור שהתקיים ולא בוטל
+        const canFeedback = !cancelled && e.isPast;
+        const feedbackCell = canFeedback
+          ? `<button class="btn btn-ghost" style="font-size:14px;padding:9px 18px"
+                     onclick="openFeedback(${e.id}, '${escapeHtml(e.className)}', '${e.startTime}')">משוב</button>`
+          : "";
+
+        return `
+          <tr>
+            <td><span class="class-name">${escapeHtml(e.className)}</span></td>
+            <td>${formatDate(e.startTime)}</td>
+            <td>${badge}</td>
+            <td style="text-align:left">${feedbackCell}</td>
+          </tr>`;
+      }).join("");
+    }
+
+    /* ---------- ביטול הרשמה (חלון מודל) ---------- */
+
+    let pendingCancelId = null;
+
+    function openCancel(enrollmentId, className) {
+      pendingCancelId = enrollmentId;
+
+      const info = document.getElementById("cancelClassInfo");
+      const confirmBtn = document.getElementById("cancelConfirmBtn");
+
+      info.textContent = className ? `שיעור: ${className}` : "";
+      confirmBtn.disabled = false;
+      confirmBtn.textContent = "כן, לבטל";
+      document.getElementById("cancelModal").hidden = false;
+    }
+
+    function closeCancel() {
+      pendingCancelId = null;
+      document.getElementById("cancelModal").hidden = true;
+    }
+
+    async function confirmCancel() {
+      if (!pendingCancelId) return;
+
+      const btn = document.getElementById("cancelConfirmBtn");
+      const info = document.getElementById("cancelClassInfo");
+
+      btn.disabled = true;
+      btn.textContent = "מבטל...";
+
+      let res;
+      try {
+        res = await Api.cancelEnrollment(pendingCancelId);
+      } catch (err) {
+        btn.disabled = false;
+        btn.textContent = "נסי שוב";
+        info.textContent = "לא ניתן להתחבר לשרת. ודאי שהוא פועל.";
+        return;
+      }
+
+      if (!res.ok) {
+        btn.disabled = false;
+        btn.textContent = "נסי שוב";
+        info.textContent = res.data?.message || "לא ניתן לבטל את ההרשמה.";
+        return;
+      }
+
+      closeCancel();
+      showAlert("pageAlert", "ההרשמה בוטלה.", "success");
+      await loadPage();
+    }
+
+    /* ---------- משוב ---------- */
+
+    function openFeedback(enrollmentId, className, startTime) {
+      currentEnrollmentId = enrollmentId;
+      currentRating = 0;
+
+      document.getElementById("feedbackClassInfo").textContent =
+        `${className} · ${formatDate(startTime)}`;
+      document.getElementById("feedbackComment").value = "";
+      renderStars();
+      document.getElementById("feedbackModal").classList.add("open");
+    }
+
+    function closeFeedback() {
+      document.getElementById("feedbackModal").classList.remove("open");
+    }
+
+    function renderStars() {
+      const row = document.getElementById("ratingRow");
+      row.innerHTML = [1, 2, 3, 4, 5].map(n =>
+        `<button type="button" onclick="setRating(${n})"
+                 style="font-size:28px;background:none;border:none;cursor:pointer;color:${n <= currentRating ? "#b7f34d" : "#555"}">★</button>`
+      ).join("");
+    }
+
+    function setRating(n) {
+      currentRating = n;
+      renderStars();
+    }
+
+    async function submitFeedback() {
+      if (!currentRating) {
+        showAlert("pageAlert", "יש לבחור דירוג.", "error");
+        return;
+      }
+
+      const comment = document.getElementById("feedbackComment").value.trim();
+
+      let res;
+      try {
+        res = await Api.addFeedback(currentEnrollmentId, currentRating, comment);
+      } catch (err) {
+        showAlert("pageAlert", "לא ניתן להתחבר לשרת.", "error");
+        return;
+      }
+
+      closeFeedback();
+
+      if (res.ok) {
+        showAlert("pageAlert", "תודה על המשוב.", "success");
+      } else {
+        showAlert("pageAlert", res.data?.message || "לא ניתן לשלוח משוב.", "error");
+      }
+    }
+
+    /* ---------- חיבור אירועי החלון ---------- */
+
+    document.getElementById("cancelConfirmBtn").addEventListener("click", confirmCancel);
+
+    document.getElementById("cancelModal").addEventListener("click", (ev) => {
+      if (ev.target.id === "cancelModal") closeCancel();
+    });
+
+    document.addEventListener("keydown", (ev) => {
+      if (ev.key === "Escape") closeCancel();
+    });
+
+    loadPage();
+  </script>
+</body>
+
+</html>
