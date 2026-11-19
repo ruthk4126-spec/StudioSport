@@ -71,7 +71,6 @@ public class ClassRepository : IClassRepository
             return false;
 
         session.EnrolledCount++;
-        session.Version = Guid.NewGuid();
 
         try
         {

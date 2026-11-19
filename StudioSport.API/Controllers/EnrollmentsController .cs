@@ -77,7 +77,7 @@ public class EnrollmentsController : ControllerBase
         EnrollmentOutcome.ClassNotFound => NotFound(new { message = "שיעור לא נמצא" }),
         EnrollmentOutcome.ClassAlreadyStarted => BadRequest(new { message = "השיעור כבר התקיים" }),
         EnrollmentOutcome.ClassCancelled => BadRequest(new { message = "השיעור בוטל" }),
-        EnrollmentOutcome.BookingWindowClosed => BadRequest(new { message = "הרישום לשיעור זה נסגר" }),
+        EnrollmentOutcome.BookingWindowClosed => BadRequest(new { message = "ניתן להירשם לשיעור עד 7 ימים לפני מועדו. נסי שוב במועד קרוב יותר." }),
         EnrollmentOutcome.SubscriptionRequired => StatusCode(403, new { message = "נדרש מנוי פעיל. ניתן לחדש" }),
         EnrollmentOutcome.DailyLimitReached => Conflict(new { message = "הגעת למכסת השיעורים היומית" }),
         EnrollmentOutcome.FeedbackNotAllowed => BadRequest(new { message = "לא ניתן לתת משוב לשיעור זה" }),
