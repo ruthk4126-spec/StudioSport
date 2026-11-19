@@ -4,14 +4,12 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using AutoMapper;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using StudioSport.Core.Common;
 using StudioSport.Core.DTOs.Classes;
 using StudioSport.Core.Entities;
 using StudioSport.Core.Enums;
 using StudioSport.Core.Interfaces;
-using StudioSport.Data;
 using StudioSport.Service.Exceptions;
 
 namespace StudioSport.Service.Services;
@@ -20,34 +18,31 @@ public class ClassService : IClassService
 {
     private readonly IClassRepository _classes;
     private readonly ITrainerRepository _trainers;
-    private readonly AppDbContext _db;
+    private readonly IEnrollmentRepository _enrollments;
     private readonly IMapper _mapper;
     private readonly ILogger<ClassService> _logger;
 
     public ClassService(
         IClassRepository classes,
         ITrainerRepository trainers,
-        AppDbContext db,
+        IEnrollmentRepository enrollments,
         IMapper mapper,
         ILogger<ClassService> logger)
     {
         _classes = classes;
         _trainers = trainers;
-        _db = db;
+        _enrollments = enrollments;
         _mapper = mapper;
         _logger = logger;
     }
     public async Task<ClassStatsDto> GetStatsAsync(int days, CancellationToken ct)
     {
-        var now = DateTime.UtcNow;
-        var q = _db.ClassSessions
-            .AsNoTracking()
-            .Where(c => !c.IsCancelled && c.StartTime >= now);
+        var (total, free) = await _classes.GetStatsAsync(ct);
 
         return new ClassStatsDto
         {
-            Total = await q.CountAsync(ct),
-            Free = await q.SumAsync(c => c.Capacity - c.EnrolledCount, ct)
+            Total = total,
+            Free = free
         };
     }
     public async Task<PagedResult<ClassResponseDto>> GetPagedAsync(ClassQueryParameters query, CancellationToken ct)
@@ -122,24 +117,16 @@ public class ClassService : IClassService
         if (entity.IsCancelled)
             return false;
 
-        var enrollments = await _db.Enrollments
-            .Where(e => e.ClassSessionId == id && e.Status == EnrollmentStatus.Active)
-            .ToListAsync(ct);
-
-        var now = DateTime.UtcNow;
-        foreach (var e in enrollments)
-        {
-            e.Status = EnrollmentStatus.Cancelled;
-            e.CancelledAtUtc = now;
-        }
+        // ביטול הרישומים ב-UPDATE אחד, ואז איפוס המונה על השיעור
+        var cancelledCount = await _enrollments
+            .CancelActiveByClassAsync(id, DateTime.UtcNow, ct);
 
         entity.IsCancelled = true;
         entity.EnrolledCount = 0;
 
         await _classes.UpdateAsync(entity, ct);
-        await _db.SaveChangesAsync(ct);
 
-        _logger.LogWarning("Class {ClassId} cancelled; {Count} enrollments cancelled", id, enrollments.Count);
+        _logger.LogWarning("Class {ClassId} cancelled; {Count} enrollments cancelled", id, cancelledCount);
         return true;
     }
 }

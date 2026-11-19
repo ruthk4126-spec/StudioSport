@@ -17,4 +17,7 @@ public interface IClassRepository
     Task<bool> TryReserveSpotAsync(int classId, CancellationToken ct);
 
     Task ReleaseSpotAsync(int classId, CancellationToken ct);
+
+    /// סה"כ שיעורים עתידיים, וסה"כ מקומות פנויים בהם.
+    Task<(int Total, int Free)> GetStatsAsync(CancellationToken ct);
 }

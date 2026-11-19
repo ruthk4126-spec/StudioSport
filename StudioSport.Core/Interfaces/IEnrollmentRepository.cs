@@ -19,4 +19,7 @@ public interface IEnrollmentRepository
     Task AddAsync(Enrollment entity, CancellationToken ct);
 
     Task UpdateAsync(Enrollment entity, CancellationToken ct);
+
+    /// מבטל את כל הרישומים הפעילים של שיעור, ומחזיר את מספרם.
+    Task<int> CancelActiveByClassAsync(int classId, DateTime cancelledAtUtc, CancellationToken ct);
 }

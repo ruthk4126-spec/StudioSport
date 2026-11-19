@@ -60,4 +60,13 @@ public class EnrollmentRepository : IEnrollmentRepository
 
     public async Task UpdateAsync(Enrollment entity, CancellationToken ct)
         => await _db.SaveChangesAsync(ct);
+
+    public async Task<int> CancelActiveByClassAsync(int classId, DateTime cancelledAtUtc, CancellationToken ct)
+        => await _db.Enrollments
+            .Where(e => e.ClassSessionId == classId && e.Status == EnrollmentStatus.Active)
+            .ExecuteUpdateAsync(
+                s => s
+                    .SetProperty(e => e.Status, EnrollmentStatus.Cancelled)
+                    .SetProperty(e => e.CancelledAtUtc, cancelledAtUtc),
+                ct);
 }

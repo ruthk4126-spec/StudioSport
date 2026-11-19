@@ -85,6 +85,27 @@ public class ClassRepository : IClassRepository
         return affectedRows > 0;
     }
 
+    public async Task<(int Total, int Free)> GetStatsAsync(CancellationToken ct)
+    {
+        var now = DateTime.UtcNow;
+
+        var q = _db.ClassSessions
+            .AsNoTracking()
+            .Where(c => !c.IsCancelled && c.StartTime >= now);
+
+        // שאילתה אחת — במקום Count ואז Sum על שתי שאילתות נפרדות
+        var row = await q
+            .GroupBy(_ => 1)
+            .Select(g => new
+            {
+                Total = g.Count(),
+                Free = g.Sum(c => c.Capacity - c.EnrolledCount)
+            })
+            .FirstOrDefaultAsync(ct);
+
+        return (row?.Total ?? 0, row?.Free ?? 0);
+    }
+
     public async Task ReleaseSpotAsync(int classId, CancellationToken ct)
     {
         await _db.ClassSessions
