@@ -1,0 +1,364 @@
+﻿<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StudioSport - ניהול שיעורים</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+  /* אותו חלון אישור שמשתמשות רואות בביטול הרשמה — גם כאן, במקום confirm() */
+  #cancelModal {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: rgba(0, 0, 0, 0.75);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    box-sizing: border-box;
+    direction: rtl;
+  }
+
+  #cancelModal[hidden] { display: none !important; }
+
+  #cancelModal .modal-box {
+    background: #101410;
+    border: 2px solid #b7f34d;
+    border-radius: 16px;
+    padding: 24px;
+    width: 100%;
+    max-width: 400px;
+    box-sizing: border-box;
+    text-align: right;
+    color: #eee;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+  }
+
+  #cancelModal .modal-box h3 {
+    margin: 0 0 12px;
+    font-size: 1.15rem;
+    color: #b7f34d;
+  }
+
+  #cancelModal .modal-box p {
+    margin: 0 0 8px;
+    line-height: 1.6;
+    font-size: 0.95rem;
+  }
+
+  #cancelModal .modal-warn {
+    color: #e0a63c;
+    font-size: 0.88rem;
+  }
+
+  #cancelModal .modal-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 18px;
+  }
+
+  #cancelModal .modal-actions button {
+    flex: 1;
+    padding: 10px 14px;
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: 0.95rem;
+    cursor: pointer;
+  }
+
+  #cancelModal .btn-danger {
+    background: #c0392b;
+    border: 1px solid #c0392b;
+    color: #fff;
+  }
+
+  #cancelModal .btn-ghost {
+    background: transparent;
+    border: 1px solid #444;
+    color: #ccc;
+  }
+  </style>
+</head>
+<body>
+
+  <header class="topbar">
+    <div class="brand">Studio<span>Sport</span></div>
+    <div class="user-area">
+      <a href="admin-classes.html" id="navAdminClasses" class="btn btn-ghost"
+   style="padding:8px 18px;font-size:14px;display:none">ניהול שיעורים</a>
+      <a href="admin.html" class="btn btn-ghost" style="padding:8px 18px;font-size:14px">בקשות מנוי</a>
+      <span id="userName"></span>
+      <div class="avatar" id="userAvatar"></div>
+      <button class="btn btn-ghost" style="padding:8px 18px;font-size:14px" onclick="logout()">יציאה</button>
+    </div>
+  </header>
+
+  <main class="page">
+    <h1 class="page-title">ניהול שיעורים</h1>
+    <p class="page-sub">הוספת שיעור חדש וביטול שיעורים קיימים.</p>
+
+    <div id="pageAlert" class="alert"></div>
+
+    <div class="table-card" style="margin-bottom:28px">
+      <h2 style="margin:0 0 18px;font-size:20px">הוספת שיעור</h2>
+
+      <div class="field">
+        <label for="fName">שם השיעור</label>
+        <input id="fName" type="text" maxlength="100" placeholder="לדוגמה: יוגה - צהריים">
+      </div>
+
+      <div class="field">
+        <label for="fStart">תאריך ושעה</label>
+        <input id="fStart" type="datetime-local">
+      </div>
+
+      <div class="field">
+        <label for="fCapacity">קיבולת (1-60)</label>
+        <input id="fCapacity" type="number" min="1" max="60" value="10">
+      </div>
+
+      <div class="field">
+        <label for="fTrainer">מדריכה</label>
+        <select id="fTrainer"></select>
+      </div>
+
+      <div class="field">
+        <label for="fNotes">הערות / ציוד</label>
+        <input id="fNotes" type="text" maxlength="500" placeholder="לדוגמה: להביא מזרן אישי">
+      </div>
+
+      <div class="form-actions">
+        <button class="btn btn-primary" id="btnCreate" onclick="createClass()">הוספת שיעור</button>
+      </div>
+    </div>
+
+    <div class="stats">
+      <div class="stat-card">
+        <div class="stat-value" id="statTotal">-</div>
+        <div class="stat-label">שיעורים פעילים</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="statCancelled">-</div>
+        <div class="stat-label">שיעורים מבוטלים</div>
+      </div>
+    </div>
+
+    <div class="table-card">
+      <table>
+        <thead>
+          <tr>
+            <th>שיעור</th>
+            <th>מדריכה</th>
+            <th>מועד</th>
+            <th>נרשמות</th>
+            <th>סטטוס</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="classesBody">
+          <tr><td colspan="6" class="empty-state">טוען...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+
+  <!-- חלון אישור ביטול שיעור -->
+  <div id="cancelModal" class="modal-overlay" hidden>
+    <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="cancelTitle">
+      <h3 id="cancelTitle">ביטול שיעור</h3>
+      <p id="cancelClassInfo"></p>
+      <p class="modal-warn">כל ההרשמות לשיעור יבוטלו והמקומות ישוחררו. הפעולה אינה ניתנת לביטול. לבטל בכל זאת?</p>
+      <div class="modal-actions">
+        <button id="cancelConfirmBtn" type="button" class="btn-danger">כן, לבטל</button>
+        <button type="button" class="btn-ghost" onclick="closeCancel()">חזרה</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script>
+    requireAuth();
+
+    const currentUser = getUser();
+    if (!currentUser || currentUser.role !== "Admin") {
+      window.location.href = "classes.html";
+    }
+    renderUserArea();
+
+    let trainers = [];
+
+    async function loadTrainers() {
+      const res = await Api.getTrainers();
+      trainers = asArray(res.data);
+      const sel = document.getElementById("fTrainer");
+      sel.innerHTML = trainers
+        .map(t => `<option value="${t.id}">${escapeHtml(t.name)}</option>`)
+        .join("");
+    }
+
+    async function loadClasses() {
+      const res = await Api.getClasses();
+      if (!res.ok) {
+        showAlert("pageAlert", res.data?.message || "לא ניתן לטעון שיעורים", "error");
+        return;
+      }
+
+      const all = asArray(res.data);
+      const active = all.filter(c => !c.isCancelled);
+      document.getElementById("statTotal").textContent = active.length;
+      document.getElementById("statCancelled").textContent = all.length - active.length;
+
+      const body = document.getElementById("classesBody");
+
+      if (!all.length) {
+        body.innerHTML = '<tr><td colspan="6" class="empty-state">אין שיעורים</td></tr>';
+        return;
+      }
+
+      body.innerHTML = all.map(c => {
+        const full = c.availableSpots === 0;
+        const badge = c.isCancelled
+          ? '<span class="badge badge-muted">מבוטל</span>'
+          : full
+            ? '<span class="badge badge-full">מלא</span>'
+            : '<span class="badge badge-free">פנוי</span>';
+
+        const action = c.isCancelled
+          ? ""
+          : `<button class="btn btn-danger" style="font-size:14px;padding:8px 18px"
+                     onclick="cancelClass(${c.id}, this, '${escapeHtml(c.name).replace(/'/g, "\\'")}')">ביטול</button>`;
+
+        return `
+          <tr>
+            <td>
+              <span class="class-name">${escapeHtml(c.name)}</span>
+              ${c.equipmentNotes ? `<span class="class-note">${escapeHtml(c.equipmentNotes)}</span>` : ""}
+            </td>
+            <td>${escapeHtml(c.trainerName || "-")}</td>
+            <td>${formatDate(c.startTime)}</td>
+            <td>${c.enrolledCount} / ${c.capacity}</td>
+            <td>${badge}</td>
+            <td style="text-align:left">${action}</td>
+          </tr>`;
+      }).join("");
+    }
+
+    async function createClass() {
+      hideAlert("pageAlert");
+
+      const name = document.getElementById("fName").value.trim();
+      const start = document.getElementById("fStart").value;
+      const capacity = parseInt(document.getElementById("fCapacity").value, 10);
+      const trainerId = parseInt(document.getElementById("fTrainer").value, 10);
+      const notes = document.getElementById("fNotes").value.trim();
+
+      if (!name) return showAlert("pageAlert", "יש למלא שם שיעור", "error");
+      if (!start) return showAlert("pageAlert", "יש לבחור תאריך ושעה", "error");
+      if (!capacity || capacity < 1 || capacity > 60)
+        return showAlert("pageAlert", "הקיבולת חייבת להיות בין 1 ל-60", "error");
+      if (!trainerId) return showAlert("pageAlert", "יש לבחור מדריכה", "error");
+
+      const btn = document.getElementById("btnCreate");
+      btn.disabled = true;
+      btn.textContent = "מוסיף...";
+
+      const res = await Api.createClass({
+        name: name,
+        startTime: start,
+        capacity: capacity,
+        trainerId: trainerId,
+        equipmentNotes: notes || null
+      });
+
+      btn.disabled = false;
+      btn.textContent = "הוספת שיעור";
+
+      if (!res.ok) {
+        showAlert("pageAlert", res.data?.message || "לא ניתן להוסיף את השיעור", "error");
+        return;
+      }
+
+      showAlert("pageAlert", "השיעור נוסף בהצלחה.", "success");
+      document.getElementById("fName").value = "";
+      document.getElementById("fStart").value = "";
+      document.getElementById("fNotes").value = "";
+      await loadClasses();
+    }
+
+    /* ---------- ביטול שיעור (חלון מודל) ---------- */
+
+    let pendingCancel = null;   // { id, btn, className }
+
+    function cancelClass(id, btn, className) {
+      pendingCancel = { id, btn, className };
+
+      const info = document.getElementById("cancelClassInfo");
+      const confirmBtn = document.getElementById("cancelConfirmBtn");
+
+      info.textContent = className ? `שיעור: ${className}` : "";
+      confirmBtn.disabled = false;
+      confirmBtn.textContent = "כן, לבטל";
+      document.getElementById("cancelModal").hidden = false;
+    }
+
+    function closeCancel() {
+      pendingCancel = null;
+      document.getElementById("cancelModal").hidden = true;
+    }
+
+    async function confirmCancel() {
+      if (!pendingCancel) return;
+
+      const { id, btn } = pendingCancel;
+      const confirmBtn = document.getElementById("cancelConfirmBtn");
+      const info = document.getElementById("cancelClassInfo");
+
+      confirmBtn.disabled = true;
+      confirmBtn.textContent = "מבטל...";
+
+      let res;
+      try {
+        res = await Api.cancelClass(id);
+      } catch (err) {
+        confirmBtn.disabled = false;
+        confirmBtn.textContent = "נסי שוב";
+        info.textContent = "לא ניתן להתחבר לשרת. ודאי שהוא פועל.";
+        return;
+      }
+
+      if (!res.ok) {
+        confirmBtn.disabled = false;
+        confirmBtn.textContent = "נסי שוב";
+        info.textContent = res.data?.message || "לא ניתן לבטל את השיעור";
+        return;
+      }
+
+      closeCancel();
+      if (btn) { btn.disabled = false; btn.textContent = "ביטול"; }
+      showAlert("pageAlert", "השיעור בוטל.", "success");
+      await loadClasses();
+    }
+
+    /* ---------- חיבור אירועי החלון ---------- */
+
+    document.getElementById("cancelConfirmBtn").addEventListener("click", confirmCancel);
+
+    document.getElementById("cancelModal").addEventListener("click", (ev) => {
+      if (ev.target.id === "cancelModal") closeCancel();
+    });
+
+    document.addEventListener("keydown", (ev) => {
+      if (ev.key === "Escape") closeCancel();
+    });
+
+    (async function init() {
+      await loadTrainers();
+      await loadClasses();
+    })();
+  </script>
+</body>
+</html>
