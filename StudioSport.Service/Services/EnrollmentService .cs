@@ -73,9 +73,14 @@ public class EnrollmentService : IEnrollmentService
         }
 
         // 6. כבר רשומה?
-        var existing = await _enrollments.GetByUserAndClassAsync(userId, classId, ct);
-        if (existing is not null)
+        var existingActive = await _enrollments.GetByUserAndClassAsync(userId, classId, ct);
+        if (existingActive is not null)
             return EnrollmentResult.Failure(EnrollmentOutcome.AlreadyEnrolled);
+
+        // רשומה שבוטלה באותו שיעור: מחדשים אותה במקום ליצור חדשה.
+        // האינדקס הייחודי (ClassSessionId, UserId) חל גם על רשומות מבוטלות,
+        // ולכן INSERT חדש היה נכשל למרות שהרשומה הקודמת אינה פעילה.
+        var previous = await _enrollments.GetLatestByUserAndClassAsync(userId, classId, ct);
 
         // 7. מכסת שיעורים ליום
         if (_settings.MaxClassesPerDay > 0)
@@ -101,15 +106,30 @@ public class EnrollmentService : IEnrollmentService
         // 9. יצירת הרישום + צריכת השיעור, עם שחרור המקום בכל כשלון
         try
         {
-            var enrollment = new Enrollment
-            {
-                ClassSessionId = classId,
-                UserId = userId,
-                Status = EnrollmentStatus.Active,
-                CreatedAtUtc = DateTime.UtcNow
-            };
+            Enrollment enrollment;
 
-            await _enrollments.AddAsync(enrollment, ct);
+            if (previous is not null)
+            {
+                // החזרת רשומה מבוטלת לשימוש — שומרת על ההיסטוריה ומכבדת את האינדקס
+                previous.Status = EnrollmentStatus.Active;
+                previous.CreatedAtUtc = DateTime.UtcNow;
+                previous.CancelledAtUtc = null;
+                await _enrollments.UpdateAsync(previous, ct);
+                enrollment = previous;
+            }
+            else
+            {
+                enrollment = new Enrollment
+                {
+                    ClassSessionId = classId,
+                    UserId = userId,
+                    Status = EnrollmentStatus.Active,
+                    CreatedAtUtc = DateTime.UtcNow
+                };
+
+                await _enrollments.AddAsync(enrollment, ct);
+            }
+
             await _subscriptionService.ConsumeCreditAsync(userId, ct);
 
             _logger.LogInformation(

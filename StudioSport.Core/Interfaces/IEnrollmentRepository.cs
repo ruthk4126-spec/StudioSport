@@ -8,6 +8,10 @@ public interface IEnrollmentRepository
 
     Task<Enrollment?> GetByUserAndClassAsync(int userId, int classId, CancellationToken ct);
 
+    /// מחזיר את הרשומה האחרונה של המשתמשת בשיעור, בכל סטטוס.
+    /// נדרש כדי להחיות רשומה שבוטלה, במקום ליצור כפילות שמפרה את האינדקס הייחודי.
+    Task<Enrollment?> GetLatestByUserAndClassAsync(int userId, int classId, CancellationToken ct);
+
     Task<List<Enrollment>> GetUserEnrollmentsAsync(int userId, CancellationToken ct);
 
     Task<int> CountUserEnrollmentsOnDateAsync(int userId, DateTime date, CancellationToken ct);

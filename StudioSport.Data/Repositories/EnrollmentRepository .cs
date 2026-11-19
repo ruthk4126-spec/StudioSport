@@ -23,6 +23,12 @@ public class EnrollmentRepository : IEnrollmentRepository
                                    && e.ClassSessionId == classId
                                    && e.Status == EnrollmentStatus.Active, ct);
 
+    public async Task<Enrollment?> GetLatestByUserAndClassAsync(int userId, int classId, CancellationToken ct)
+        => await _db.Enrollments
+            .Where(e => e.UserId == userId && e.ClassSessionId == classId)
+            .OrderByDescending(e => e.Id)
+            .FirstOrDefaultAsync(ct);
+
     public async Task<List<Enrollment>> GetUserEnrollmentsAsync(int userId, CancellationToken ct)
         => await _db.Enrollments
             .AsNoTracking()

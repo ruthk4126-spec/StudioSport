@@ -24,3 +24,4 @@ Thumbs.db
 
 StudioSport.API/appsettings.Development.json
 *.Backup.tmp
+publish-test/

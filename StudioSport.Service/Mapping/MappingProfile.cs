@@ -43,6 +43,9 @@ public class MappingProfile : Profile
             .ForMember(d => d.Status,
                 o => o.MapFrom(s => s.Status.ToString()));
 
+        // מדריכה -> תשובה
+        CreateMap<Trainer, Core.DTOs.Trainers.TrainerResponseDto>();
+
         // מנוי -> תשובה
         CreateMap<Subscription, SubscriptionResponseDto>()
             .ForMember(d => d.Status,

@@ -80,6 +80,27 @@ public class SubscriptionService : ISubscriptionService
         }).ToList();
     }
 
+    public async Task<SubscriptionResponseDto?> GetMyActiveAsync(int userId, CancellationToken ct)
+    {
+        var sub = await _subscriptions.GetActiveByUserIdAsync(userId, DateTime.UtcNow, ct);
+        if (sub is null) return null;
+
+        var dto = _mapper.Map<SubscriptionResponseDto>(sub);
+        dto.Username = sub.User?.Username ?? string.Empty;
+        return dto;
+    }
+
+    public async Task<SubscriptionResponseDto?> GetMyPendingAsync(int userId, CancellationToken ct)
+    {
+        var pending = await _subscriptions.GetPendingAsync(ct);
+        var mine = pending.FirstOrDefault(s => s.UserId == userId);
+        if (mine is null) return null;
+
+        var dto = _mapper.Map<SubscriptionResponseDto>(mine);
+        dto.Username = mine.User?.Username ?? string.Empty;
+        return dto;
+    }
+
     public async Task<SubscriptionResponseDto?> ApproveAsync(int subscriptionId, CancellationToken ct)
     {
         var sub = await _subscriptions.GetByIdAsync(subscriptionId, ct);

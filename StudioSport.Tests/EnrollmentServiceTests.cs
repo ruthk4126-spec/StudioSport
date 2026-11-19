@@ -213,6 +213,50 @@ public class EnrollmentServiceTests
         Assert.Equal(EnrollmentOutcome.ClassAlreadyStarted, result.Outcome);
     }
 
+    // ---------- הרשמה מחדש אחרי ביטול ----------
+
+    [Fact]
+    public async Task EnrollAsync_AfterCancellation_ReactivatesPreviousEnrollmentInsteadOfCreatingNew()
+    {
+        // Arrange — יש רשומה מבוטלת לאותו שיעור, ולכן אסור ליצור חדשה:
+        // האינדקס הייחודי (ClassSessionId, UserId) היה נכשל ב-INSERT.
+        var session = FutureSession();
+        var cancelled = new Enrollment
+        {
+            Id = 42,
+            UserId = 2,
+            ClassSessionId = 1,
+            Status = EnrollmentStatus.Cancelled,
+            CreatedAtUtc = DateTime.UtcNow.AddDays(-3),
+            CancelledAtUtc = DateTime.UtcNow.AddDays(-2)
+        };
+
+        _classes.Setup(r => r.GetByIdAsync(1, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(session);
+        _subscriptions.Setup(r => r.GetActiveByUserIdAsync(2, session.StartTime, It.IsAny<CancellationToken>()))
+                      .ReturnsAsync(ActiveSubscription());
+        _enrollments.Setup(r => r.GetByUserAndClassAsync(2, 1, It.IsAny<CancellationToken>()))
+                    .ReturnsAsync((Enrollment?)null);   // אין רשומה פעילה
+        _enrollments.Setup(r => r.GetLatestByUserAndClassAsync(2, 1, It.IsAny<CancellationToken>()))
+                    .ReturnsAsync(cancelled);           // אבל יש מבוטלת
+        _classes.Setup(r => r.TryReserveSpotAsync(1, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(true);
+
+        var sut = CreateSut();
+
+        // Act
+        var result = await sut.EnrollAsync(1, 2, CancellationToken.None);
+
+        // Assert
+        Assert.Equal(EnrollmentOutcome.Success, result.Outcome);
+        Assert.Equal(42, result.EnrollmentId);
+        Assert.Equal(EnrollmentStatus.Active, cancelled.Status);
+        Assert.Null(cancelled.CancelledAtUtc);
+
+        _enrollments.Verify(r => r.UpdateAsync(It.IsAny<Enrollment>(), It.IsAny<CancellationToken>()), Times.Once);
+        _enrollments.Verify(r => r.AddAsync(It.IsAny<Enrollment>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
     // ---------- ביטול ----------
 
     [Fact]

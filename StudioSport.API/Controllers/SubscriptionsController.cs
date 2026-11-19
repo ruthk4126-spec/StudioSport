@@ -1,8 +1,6 @@
-﻿using AutoMapper;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
-using StudioSport.Core.DTOs.Subscriptions;
 using StudioSport.Core.Enums;
 using StudioSport.Core.Interfaces;
 
@@ -13,18 +11,9 @@ namespace StudioSport.API.Controllers;
 public class SubscriptionsController : ControllerBase
 {
     private readonly ISubscriptionService _subscriptions;
-    private readonly ISubscriptionRepository _repository;
-    private readonly IMapper _mapper;
 
-    public SubscriptionsController(
-        ISubscriptionService subscriptions,
-        ISubscriptionRepository repository,
-        IMapper mapper)
-    {
-        _subscriptions = subscriptions;
-        _repository = repository;
-        _mapper = mapper;
-    }
+    public SubscriptionsController(ISubscriptionService subscriptions)
+        => _subscriptions = subscriptions;
 
     private int CurrentUserId =>
         int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
@@ -37,7 +26,7 @@ public class SubscriptionsController : ControllerBase
 
     [HttpPost("request")]
     [Authorize]
-    public async Task<IActionResult> Request([FromQuery] SubscriptionPlan plan, CancellationToken ct)
+    public async Task<IActionResult> RequestSubscription([FromQuery] SubscriptionPlan plan, CancellationToken ct)
     {
         try
         {
@@ -49,33 +38,27 @@ public class SubscriptionsController : ControllerBase
             return Conflict(new { message = ex.Message });
         }
     }
-    
 
     [HttpGet("my")]
     [Authorize]
     public async Task<IActionResult> My(CancellationToken ct)
     {
-        var sub = await _repository.GetActiveByUserIdAsync(CurrentUserId, DateTime.UtcNow, ct);
-        if (sub is null) return NoContent();
-        return Ok(_mapper.Map<SubscriptionResponseDto>(sub));
+        var sub = await _subscriptions.GetMyActiveAsync(CurrentUserId, ct);
+        return sub is null ? NoContent() : Ok(sub);
     }
 
     [HttpGet("my-pending")]
     [Authorize]
     public async Task<IActionResult> MyPending(CancellationToken ct)
     {
-        var all = await _subscriptions.GetPendingAsync(ct);
-        var mine = all.FirstOrDefault(s => s.UserId == CurrentUserId);
+        var mine = await _subscriptions.GetMyPendingAsync(CurrentUserId, ct);
         return mine is null ? NoContent() : Ok(mine);
     }
 
     [HttpGet("pending")]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Pending(CancellationToken ct)
-    {
-        var pending = await _subscriptions.GetPendingAsync(ct);
-        return Ok(pending);
-    }
+        => Ok(await _subscriptions.GetPendingAsync(ct));
 
     [HttpPost("{id:int}/approve")]
     [Authorize(Roles = "Admin")]
@@ -92,7 +75,4 @@ public class SubscriptionsController : ControllerBase
             return Conflict(new { message = ex.Message });
         }
     }
-
 }
-
-

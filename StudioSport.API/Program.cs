@@ -49,6 +49,7 @@ builder.Services.Configure<BookingSettings>(builder.Configuration.GetSection("Bo
 // --- Services ---
 builder.Services.AddScoped<IEnrollmentService, EnrollmentService>();
 builder.Services.AddScoped<IClassService, ClassService>();
+builder.Services.AddScoped<ITrainerService, TrainerService>();
 builder.Services.AddScoped<ISubscriptionService, SubscriptionService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ITokenService, TokenService>();

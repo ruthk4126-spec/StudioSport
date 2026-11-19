@@ -61,7 +61,7 @@ public class ExceptionHandlingMiddleware
             DbUpdateConcurrencyException =>
                 "הנתון עודכן על ידי משתמש אחר. יש לרענן ולנסות שוב.",
             DbUpdateException =>
-                "לא ניתן להשלים את הפעולה כרגע. ייתכן שהמקום נתפס בינתיים.",
+                "לא ניתן להשלים את הפעולה כרגע עקב התנגשות בנתונים. נסי לרענן ולנסות שוב.",
             _ when statusCode == StatusCodes.Status500InternalServerError =>
                 "אירעה שגיאה בלתי צפויה",
             _ => ex.Message

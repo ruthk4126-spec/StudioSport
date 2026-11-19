@@ -10,6 +10,8 @@ public interface ISubscriptionService
     Task<SubscriptionResponseDto> RequestAsync(int userId, SubscriptionPlan plan, CancellationToken ct);
     Task<bool> HasAvailableCreditAsync(int userId, CancellationToken ct);
     Task<IReadOnlyList<SubscriptionResponseDto>> GetPendingAsync(CancellationToken ct);
+    Task<SubscriptionResponseDto?> GetMyActiveAsync(int userId, CancellationToken ct);
+    Task<SubscriptionResponseDto?> GetMyPendingAsync(int userId, CancellationToken ct);
     Task<SubscriptionResponseDto?> ApproveAsync(int subscriptionId, CancellationToken ct);
     Task ConsumeCreditAsync(int userId, CancellationToken ct);
     Task RefundCreditAsync(int userId, CancellationToken ct);

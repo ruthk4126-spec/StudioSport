@@ -292,9 +292,10 @@
 
       if (btn) { btn.disabled = false; btn.textContent = "הירשמות"; }
 
-      // 409 = המקום נתפס בו-זמנית על ידי משתמש אחר
+      // 409 = התנגשות. ההודעה מגיעה מהשרת כי יש כמה סוגים:
+      // מקום שנתפס, כבר רשומה, מכסה יומית — וכולם שונים.
       if (res.status === 409) {
-        showAlert("pageAlert", "המקום בשיעור נתפס על ידי משתמש אחר. נסי שוב.", "error");
+        showAlert("pageAlert", res.data?.message || "לא ניתן להשלים את הרישום כרגע. נסי שוב.", "error");
         await loadPage();
         return;
       }
