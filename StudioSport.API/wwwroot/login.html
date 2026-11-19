@@ -8,6 +8,81 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
+  <style>
+    /* ---------- שיפור טופס ההתחברות/הרשמה ---------- */
+    .auth-card { max-width: 420px; }
+
+    .field { position: relative; }
+
+    .field input {
+      width: 100%;
+      box-sizing: border-box;
+      padding-left: 44px;   /* מקום לכפתור העין */
+    }
+
+    /* כפתור הצגת/הסתרת סיסמה */
+    .toggle-pass {
+      position: absolute;
+      left: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      border: 0;
+      cursor: pointer;
+      color: #9aa39a;
+      border-radius: 8px;
+      padding: 0;
+      font-size: 16px;
+      line-height: 1;
+    }
+    .toggle-pass:hover { color: #b7f34d; background: rgba(183, 243, 77, 0.08); }
+    .toggle-pass:focus-visible { outline: 2px solid #b7f34d; outline-offset: 2px; }
+
+    /* מדידת חוזק סיסמה */
+    .strength {
+      display: flex;
+      gap: 6px;
+      margin-top: 8px;
+    }
+    .strength-bar {
+      flex: 1;
+      height: 4px;
+      border-radius: 2px;
+      background: #2a2f2a;
+      transition: background 0.2s ease;
+    }
+    .strength-bar.on-weak   { background: #c0392b; }
+    .strength-bar.on-medium { background: #e0a63c; }
+    .strength-bar.on-strong { background: #b7f34d; }
+
+    .strength-label {
+      margin-top: 6px;
+      font-size: 0.8rem;
+      color: #9aa39a;
+      min-height: 1.1em;
+    }
+
+    .field-error {
+      display: block;
+      margin-top: 6px;
+      font-size: 0.8rem;
+      color: #e74c3c;
+      min-height: 1.1em;
+    }
+
+    .field input[aria-invalid="true"] {
+      border-color: #e74c3c !important;
+    }
+
+    .btn-block { width: 100%; }
+
+    .btn-loading { opacity: 0.7; pointer-events: none; }
+  </style>
 </head>
 <body>
 
@@ -21,35 +96,55 @@
 
       <div id="authAlert" class="alert"></div>
 
-      <form id="loginForm">
+      <form id="loginForm" novalidate>
         <div class="field">
           <label for="loginUser">שם משתמש</label>
-          <input type="text" id="loginUser" placeholder="ruthi" autocomplete="username" required>
+          <input type="text" id="loginUser" placeholder="השם שבחרת" autocomplete="username"
+                 aria-describedby="loginUserErr" required>
+          <span class="field-error" id="loginUserErr" aria-live="polite"></span>
         </div>
         <div class="field">
           <label for="loginPass">סיסמה</label>
-          <input type="password" id="loginPass" placeholder="••••••••" autocomplete="current-password" required>
+          <input type="password" id="loginPass" placeholder="הסיסמה שלך" autocomplete="current-password"
+                 aria-describedby="loginPassErr" required>
+          <button type="button" class="toggle-pass" data-target="loginPass"
+                  aria-label="הצגת הסיסמה" aria-pressed="false">👁</button>
+          <span class="field-error" id="loginPassErr" aria-live="polite"></span>
         </div>
         <div class="form-actions">
-          <button type="submit" class="btn btn-primary">התחברות</button>
+          <button type="submit" class="btn btn-primary btn-block" id="loginSubmit">התחברות</button>
         </div>
       </form>
 
-      <form id="registerForm" style="display:none">
+      <form id="registerForm" style="display:none" novalidate>
         <div class="field">
           <label for="regUser">שם משתמש</label>
-          <input type="text" id="regUser" placeholder="בחרי שם משתמש" required>
+          <input type="text" id="regUser" placeholder="3 עד 50 תווים" autocomplete="username"
+                 aria-describedby="regUserErr" required>
+          <span class="field-error" id="regUserErr" aria-live="polite"></span>
         </div>
         <div class="field">
-          <label for="regEmail">דוא"ל</label>
-          <input type="email" id="regEmail" placeholder="you@example.com" required>
+          <label for="regEmail">דוא"ל <span style="color:#9aa39a;font-weight:400">(לא חובה)</span></label>
+          <input type="email" id="regEmail" placeholder="you@example.com" autocomplete="email"
+                 aria-describedby="regEmailErr">
+          <span class="field-error" id="regEmailErr" aria-live="polite"></span>
         </div>
         <div class="field">
           <label for="regPass">סיסמה</label>
-          <input type="password" id="regPass" placeholder="לפחות 6 תווים" minlength="6" required>
+          <input type="password" id="regPass" placeholder="לפחות 6 תווים" autocomplete="new-password"
+                 aria-describedby="regPassErr" required>
+          <button type="button" class="toggle-pass" data-target="regPass"
+                  aria-label="הצגת הסיסמה" aria-pressed="false">👁</button>
+          <div class="strength" id="strengthBars" aria-hidden="true">
+            <span class="strength-bar"></span>
+            <span class="strength-bar"></span>
+            <span class="strength-bar"></span>
+          </div>
+          <div class="strength-label" id="strengthLabel" aria-live="polite"></div>
+          <span class="field-error" id="regPassErr"></span>
         </div>
         <div class="form-actions">
-          <button type="submit" class="btn btn-primary">יצירת חשבון</button>
+          <button type="submit" class="btn btn-primary btn-block" id="registerSubmit">יצירת חשבון</button>
         </div>
       </form>
 
@@ -89,44 +184,210 @@
       hideAlert("authAlert");
     });
 
+    /* ---------- עזרי ולידציה ---------- */
+
+    function setFieldError(inputId, errorId, message) {
+      const input = document.getElementById(inputId);
+      const err = document.getElementById(errorId);
+      if (err) err.textContent = message || "";
+      if (input) input.setAttribute("aria-invalid", message ? "true" : "false");
+    }
+
+    function clearFieldErrors(form) {
+      form.querySelectorAll("input").forEach(i => i.setAttribute("aria-invalid", "false"));
+      form.querySelectorAll(".field-error").forEach(e => (e.textContent = ""));
+    }
+
+    function setBusy(button, busy, busyText) {
+      if (!button) return;
+      if (busy) {
+        button.dataset.originalText = button.textContent;
+        button.textContent = busyText;
+        button.classList.add("btn-loading");
+        button.setAttribute("aria-busy", "true");
+      } else {
+        if (button.dataset.originalText) button.textContent = button.dataset.originalText;
+        button.classList.remove("btn-loading");
+        button.removeAttribute("aria-busy");
+      }
+    }
+
+    /* ---------- הצגת/הסתרת סיסמה ---------- */
+
+    document.querySelectorAll(".toggle-pass").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const input = document.getElementById(btn.dataset.target);
+        if (!input) return;
+
+        const show = input.type === "password";
+        input.type = show ? "text" : "password";
+
+        // הכיתוב למסכי קורא-מסך מתאר את הפעולה הבאה
+        btn.setAttribute("aria-label", show ? "הסתרת הסיסמה" : "הצגת הסיסמה");
+        btn.setAttribute("aria-pressed", String(show));
+        btn.textContent = show ? "🙈" : "👁";
+      });
+    });
+
+    /* ---------- חוזק סיסמה ---------- */
+
+    function scorePassword(pwd) {
+      if (!pwd) return 0;
+
+      let score = 0;
+      if (pwd.length >= 6) score++;
+      if (pwd.length >= 10) score++;
+      if (/[a-z]/.test(pwd) && /[A-Z]/.test(pwd)) score++;
+      if (/\d/.test(pwd)) score++;
+      if (/[^A-Za-z0-9]/.test(pwd)) score++;
+
+      // מתחת ל-6 תווים — חלש תמיד
+      if (pwd.length < 6) return 1;
+
+      if (score <= 2) return 1;   // חלש
+      if (score <= 3) return 2;   // בינוני
+      return 3;                    // חזק
+    }
+
+    const STRENGTH_TEXT = { 1: "חלשה", 2: "בינונית", 3: "חזקה" };
+    const STRENGTH_CLASS = { 1: "on-weak", 2: "on-medium", 3: "on-strong" };
+
+    function renderStrength(pwd) {
+      const score = scorePassword(pwd);
+      const bars = document.querySelectorAll("#strengthBars .strength-bar");
+      const label = document.getElementById("strengthLabel");
+
+      bars.forEach((bar, idx) => {
+        bar.className = "strength-bar";
+        if (pwd && idx < score) bar.classList.add(STRENGTH_CLASS[score]);
+      });
+
+      label.textContent = pwd ? `חוזק הסיסמה: ${STRENGTH_TEXT[score]}` : "";
+    }
+
+    document.getElementById("regPass").addEventListener("input", (e) => {
+      renderStrength(e.target.value);
+    });
+
+    /* ---------- התחברות ---------- */
+
     loginForm.addEventListener("submit", async (e) => {
       e.preventDefault();
       hideAlert("authAlert");
+      clearFieldErrors(loginForm);
 
-      const username = document.getElementById("loginUser").value.trim();
-      const password = document.getElementById("loginPass").value;
+      const userInput = document.getElementById("loginUser");
+      const passInput = document.getElementById("loginPass");
+      const username = userInput.value.trim();
+      const password = passInput.value;
+
+      let invalid = false;
+      if (!username) { setFieldError("loginUser", "loginUserErr", "יש למלא שם משתמש"); invalid = true; }
+      if (!password) { setFieldError("loginPass", "loginPassErr", "יש למלא סיסמה"); invalid = true; }
+      if (invalid) {
+        (username ? passInput : userInput).focus();
+        return;
+      }
+
+      const submitBtn = document.getElementById("loginSubmit");
+      setBusy(submitBtn, true, "מתחברת...");
 
       try {
         const res = await Api.login(username, password);
+
         if (!res.ok) {
-          showAlert("authAlert", res.data?.message || "שם משתמש או סיסמה שגויים", "error");
+          // 401 — שם או סיסמה שגויים; הודעה כללית בכוונה, בלי לחשוף איזה מהם
+          if (res.status === 401) {
+            setFieldError("loginPass", "loginPassErr", "שם המשתמש או הסיסמה אינם נכונים");
+            passInput.value = "";
+            passInput.focus();
+          } else {
+            showAlert("authAlert", res.data?.message || "לא ניתן להתחבר כרגע", "error");
+          }
           return;
         }
+
         saveSession(res.data.token, {
           username: res.data.username || username,
           role: res.data.role
         });
         window.location.href = "classes.html";
       } catch (err) {
-        showAlert("authAlert", "לא ניתן להתחבר לשרת. ודאי שהוא פועל.", "error");
+        showAlert("authAlert", "לא ניתן להתחבר לשרת. בדקי את החיבור ונסי שוב.", "error");
+      } finally {
+        setBusy(submitBtn, false);
       }
     });
+
+    /* ---------- הרשמה ---------- */
 
     registerForm.addEventListener("submit", async (e) => {
       e.preventDefault();
       hideAlert("authAlert");
+      clearFieldErrors(registerForm);
 
-      const username = document.getElementById("regUser").value.trim();
-      const email = document.getElementById("regEmail").value.trim();
-      const password = document.getElementById("regPass").value;
+      const userInput = document.getElementById("regUser");
+      const emailInput = document.getElementById("regEmail");
+      const passInput = document.getElementById("regPass");
+
+      const username = userInput.value.trim();
+      const email = emailInput.value.trim();
+      const password = passInput.value;
+
+      let invalid = false;
+
+      if (!username) {
+        setFieldError("regUser", "regUserErr", "יש לבחור שם משתמש");
+        invalid = true;
+      } else if (username.length < 3) {
+        setFieldError("regUser", "regUserErr", "שם המשתמש חייב להכיל לפחות 3 תווים");
+        invalid = true;
+      } else if (username.length > 50) {
+        setFieldError("regUser", "regUserErr", "שם המשתמש יכול להכיל עד 50 תווים");
+        invalid = true;
+      }
+
+      if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        setFieldError("regEmail", "regEmailErr", "כתובת הדוא\"ל אינה תקינה");
+        invalid = true;
+      }
+
+      if (!password) {
+        setFieldError("regPass", "regPassErr", "יש לבחור סיסמה");
+        invalid = true;
+      } else if (password.length < 6) {
+        setFieldError("regPass", "regPassErr", "הסיסמה חייבת להכיל לפחות 6 תווים");
+        invalid = true;
+      } else if (password.length > 100) {
+        setFieldError("regPass", "regPassErr", "הסיסמה ארוכה מדי");
+        invalid = true;
+      }
+
+      if (invalid) {
+        if (username.length < 3) userInput.focus();
+        else if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) emailInput.focus();
+        else passInput.focus();
+        return;
+      }
+
+      const submitBtn = document.getElementById("registerSubmit");
+      setBusy(submitBtn, true, "יוצרת חשבון...");
 
       try {
         const res = await Api.register(username, password, email);
+
         if (!res.ok) {
-          showAlert("authAlert", res.data?.message || "לא ניתן לפתוח חשבון", "error");
+          if (res.status === 409) {
+            setFieldError("regUser", "regUserErr", "שם המשתמש הזה תפוס. נסי שם אחר.");
+            userInput.focus();
+          } else {
+            showAlert("authAlert", res.data?.message || "לא ניתן לפתוח חשבון כרגע", "error");
+          }
           return;
         }
+
         showAlert("authAlert", "החשבון נוצר. מתחברת...", "success");
+
         const login = await Api.login(username, password);
         if (login.ok) {
           saveSession(login.data.token, {
@@ -134,9 +395,18 @@
             role: login.data.role
           });
           window.location.href = "classes.html";
+        } else {
+          // נרשמה בהצלחה אבל ההתחברות האוטומטית נכשלה — לא לזרוק הודעה מטעה
+          showAlert("authAlert", "החשבון נוצר. אפשר להתחבר עכשיו.", "success");
+          isLogin = true;
+          loginForm.style.display = "block";
+          registerForm.style.display = "none";
+          document.getElementById("loginUser").value = username;
         }
       } catch (err) {
-        showAlert("authAlert", "לא ניתן להתחבר לשרת. ודאי שהוא פועל.", "error");
+        showAlert("authAlert", "לא ניתן להתחבר לשרת. בדקי את החיבור ונסי שוב.", "error");
+      } finally {
+        setBusy(submitBtn, false);
       }
     });
   </script>

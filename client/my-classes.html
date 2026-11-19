@@ -336,12 +336,14 @@
           ? '<span class="badge badge-muted">בוטל</span>'
           : '<span class="badge badge-free">התקיים</span>';
 
-        // משוב אפשרי רק על שיעור שהתקיים ולא בוטל
-        const canFeedback = !cancelled && e.isPast;
-        const feedbackCell = canFeedback
-          ? `<button class="btn btn-ghost" style="font-size:14px;padding:9px 18px"
+        // משוב אפשרי על שיעור שהתקיים ולא בוטל, ורק אם עוד לא ניתן
+        const canFeedback = !cancelled && e.isPast && !e.hasFeedback;
+        const feedbackCell = e.hasFeedback
+          ? '<span class="badge badge-muted" title="כבר נתת משוב לשיעור זה">משוב נשלח</span>'
+          : canFeedback
+            ? `<button class="btn btn-ghost" style="font-size:14px;padding:9px 18px"
                      onclick="openFeedback(${e.id}, '${escapeHtml(e.className)}', '${e.startTime}')">משוב</button>`
-          : "";
+            : "";
 
         return `
           <tr>
@@ -451,13 +453,23 @@
         return;
       }
 
-      closeFeedback();
-
       if (res.ok) {
+        closeFeedback();
         showAlert("pageAlert", "תודה על המשוב.", "success");
-      } else {
-        showAlert("pageAlert", res.data?.message || "לא ניתן לשלוח משוב.", "error");
+        await loadPage();   // מרענן — והכפתור ייעלם
+        return;
       }
+
+      // 409 = כבר ניתן משוב. לא סוגרים את החלון סתם —
+      // מסבירים למשתמשת, ואז סוגרים ומרעננים כדי שהכפתור ייעלם.
+      if (res.status === 409) {
+        showAlert("pageAlert", res.data?.message || "כבר נתת משוב לשיעור זה.", "error");
+        closeFeedback();
+        await loadPage();
+        return;
+      }
+
+      showAlert("pageAlert", res.data?.message || "לא ניתן לשלוח משוב.", "error");
     }
 
     /* ---------- חיבור אירועי החלון ---------- */

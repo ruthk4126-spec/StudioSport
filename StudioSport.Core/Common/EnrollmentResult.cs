@@ -11,7 +11,10 @@ public enum EnrollmentOutcome
     BookingWindowClosed = 6,
     SubscriptionRequired = 7,
     DailyLimitReached = 8,
-    FeedbackNotAllowed = 9
+    FeedbackNotAllowed = 9,
+
+    /// כבר קיים משוב לרישום הזה — אפשר לתת משוב אחד לכל שיעור
+    FeedbackAlreadyExists = 10
 }
 
 public class EnrollmentResult

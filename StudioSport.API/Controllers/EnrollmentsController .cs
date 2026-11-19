@@ -83,7 +83,14 @@ public class EnrollmentsController : ControllerBase
         EnrollmentOutcome.BookingWindowClosed => BadRequest(new { message = "ניתן להירשם לשיעור עד 7 ימים לפני מועדו. נסי שוב במועד קרוב יותר." }),
         EnrollmentOutcome.SubscriptionRequired => StatusCode(403, new { message = "נדרש מנוי פעיל. ניתן לחדש" }),
         EnrollmentOutcome.DailyLimitReached => Conflict(new { message = "הגעת למכסת השיעורים היומית" }),
-        EnrollmentOutcome.FeedbackNotAllowed => BadRequest(new { message = "לא ניתן לתת משוב לשיעור זה" }),
+        EnrollmentOutcome.FeedbackNotAllowed => BadRequest(new
+        {
+            message = "ניתן לתת משוב רק לשיעור שהתקיים ואשר עדיין רשומה אליו."
+        }),
+        EnrollmentOutcome.FeedbackAlreadyExists => Conflict(new
+        {
+            message = "כבר נתת משוב לשיעור זה. אפשר לתת משוב אחד לכל שיעור."
+        }),
         _ => BadRequest()
     };
 }

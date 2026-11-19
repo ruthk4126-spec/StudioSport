@@ -18,4 +18,7 @@ public class EnrollmentResponseDto
 
     // מה להביא לשיעור - מוצג אחרי ההזמנה
     public string? EquipmentNotes { get; set; }
+
+    // true אם כבר ניתן משוב — הלקוח מסתיר את הכפתור
+    public bool HasFeedback { get; set; }
 }

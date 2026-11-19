@@ -179,6 +179,10 @@ public class EnrollmentService : IEnrollmentService
         var list = await _enrollments.GetUserEnrollmentsAsync(userId, ct);
         var now = DateTime.UtcNow;
 
+        // שאילתה אחת לכל המשובים — ולא בדיקה לכל רישום (N+1)
+        var withFeedback = await _feedbacks
+            .GetEnrollmentIdsWithFeedbackAsync(list.Select(e => e.Id), ct);
+
         var mapped = list.Select(e =>
         {
             var startTime = e.ClassSession?.StartTime ?? default;
@@ -192,7 +196,8 @@ public class EnrollmentService : IEnrollmentService
                 Status = e.Status.ToString(),
                 IsPast = startTime <= now,
                 CreatedAtUtc = e.CreatedAtUtc,
-                EquipmentNotes = e.ClassSession?.EquipmentNotes
+                EquipmentNotes = e.ClassSession?.EquipmentNotes,
+                HasFeedback = withFeedback.Contains(e.Id)
             };
         }).ToList();
 
@@ -227,7 +232,7 @@ public class EnrollmentService : IEnrollmentService
 
         var already = await _feedbacks.GetByEnrollmentIdAsync(enrollmentId, ct);
         if (already is not null)
-            return EnrollmentResult.Failure(EnrollmentOutcome.FeedbackNotAllowed);
+            return EnrollmentResult.Failure(EnrollmentOutcome.FeedbackAlreadyExists);
 
         await _feedbacks.AddAsync(new Feedback
         {
