@@ -72,7 +72,10 @@ public class EnrollmentsController : ControllerBase
 
     private IActionResult MapFailure(EnrollmentOutcome outcome) => outcome switch
     {
-        EnrollmentOutcome.ClassFull => Conflict(new { message = "השיעור מלא" }),
+        EnrollmentOutcome.ClassFull => Conflict(new
+        {
+            message = "המקום האחרון בשיעור זה נתפס ברגע זה על ידי משתמשת אחרת. נסי לבחור שיעור אחר."
+        }),
         EnrollmentOutcome.AlreadyEnrolled => Conflict(new { message = "כבר רשומה לשיעור זה" }),
         EnrollmentOutcome.ClassNotFound => NotFound(new { message = "שיעור לא נמצא" }),
         EnrollmentOutcome.ClassAlreadyStarted => BadRequest(new { message = "השיעור כבר התקיים" }),
