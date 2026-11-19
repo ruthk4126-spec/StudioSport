@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="he" dir="rtl">
 
 <head>
@@ -20,8 +20,8 @@
    style="padding:8px 18px;font-size:14px;display:none">ניהול שיעורים</a>
       <a href="admin.html" id="adminLink" class="btn btn-ghost"
         style="padding:8px 18px;font-size:14px;display:none">ניהול מנויים</a>
-      <a href="my-classes.html" class="btn btn-ghost" style="padding:8px 18px;font-size:14px">השיעורים שלי</a>
-<a href="subscribe.html" class="btn btn-ghost" style="padding:8px 18px;font-size:14px">המנוי שלי</a>
+      <a href="my-classes.html" id="navMyClasses" class="btn btn-ghost" style="padding:8px 18px;font-size:14px">השיעורים שלי</a>
+<a href="subscribe.html" id="navMySubscription" class="btn btn-ghost" style="padding:8px 18px;font-size:14px">המנוי שלי</a>
       <span id="userName"></span>
       <div class="avatar" id="userAvatar"></div>
       <button class="btn btn-ghost" style="padding:8px 18px;font-size:14px" onclick="logout()">יציאה</button>
@@ -90,6 +90,8 @@
     if (_u && _u.role === 'Admin') {
   document.getElementById('adminLink').style.display = '';
   document.getElementById('navAdminClasses').style.display = 'inline-flex';
+      document.getElementById('navMyClasses').style.display = 'none';
+      document.getElementById('navMySubscription').style.display = 'none';
 }
     let currentClasses = [];
 
@@ -290,15 +292,18 @@
 
       if (btn) { btn.disabled = false; btn.textContent = "הירשמות"; }
 
-      // 409 = אין מנוי פעיל / נגמרה המכסה / השיעור התמלא / כבר רשומה
+      // 409 = המקום נתפס בו-זמנית על ידי משתמש אחר
       if (res.status === 409) {
-        const msg = res.data?.message
-          || "אין מנוי פעיל או שלא נותרו שיעורים. יש לחדש את המנוי.";
-        showAlert("pageAlert", msg, "error");
-        await loadPage();   // רענון — אולי המקומות התעדכנו
+        showAlert("pageAlert", "המקום בשיעור נתפס על ידי משתמש אחר. נסי שוב.", "error");
+        await loadPage();
         return;
       }
 
+      // 403 = אין מנוי פעיל
+      if (res.status === 403) {
+        showAlert("pageAlert", "נדרש מנוי פעיל כדי להירשם לשיעור. ניתן לחדש את המנוי.", "error");
+        return;
+      }
       showAlert("pageAlert", res.data?.message || "לא ניתן להירשם לשיעור.", "error");
     }
     function openGear(cls) {

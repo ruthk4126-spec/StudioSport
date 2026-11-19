@@ -292,15 +292,18 @@
 
       if (btn) { btn.disabled = false; btn.textContent = "הירשמות"; }
 
-      // 409 = אין מנוי פעיל / נגמרה המכסה / השיעור התמלא / כבר רשומה
+      // 409 = המקום נתפס בו-זמנית על ידי משתמש אחר
       if (res.status === 409) {
-        const msg = res.data?.message
-          || "אין מנוי פעיל או שלא נותרו שיעורים. יש לחדש את המנוי.";
-        showAlert("pageAlert", msg, "error");
-        await loadPage();   // רענון — אולי המקומות התעדכנו
+        showAlert("pageAlert", "המקום בשיעור נתפס על ידי משתמש אחר. נסי שוב.", "error");
+        await loadPage();
         return;
       }
 
+      // 403 = אין מנוי פעיל
+      if (res.status === 403) {
+        showAlert("pageAlert", "נדרש מנוי פעיל כדי להירשם לשיעור. ניתן לחדש את המנוי.", "error");
+        return;
+      }
       showAlert("pageAlert", res.data?.message || "לא ניתן להירשם לשיעור.", "error");
     }
     function openGear(cls) {
