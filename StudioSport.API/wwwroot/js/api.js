@@ -195,16 +195,31 @@ function logout() {
 
 /* ---------- ׳”׳•׳“׳¢׳•׳× ---------- */
 
+/* ההודעה מוצגת ככרטיס קבוע בראש המסך, ולכן היא נעלמת לבד
+   אחרי כמה שניות, כדי שלא תסתיר תוכן. הודעת שגיאה נשארת
+   זמן ארוך יותר מהודעת הצלחה, ולחיצה עליה סוגרת אותה מיד. */
+let _alertTimer = null;
+
 function showAlert(elementId, message, type) {
   const el = document.getElementById(elementId);
   if (!el) return;
+
   el.textContent = message;
   el.className = "alert show " + (type === "success" ? "alert-success" : "alert-error");
+
+  clearTimeout(_alertTimer);
+  _alertTimer = setTimeout(() => hideAlert(elementId), type === "success" ? 3500 : 6000);
+
+  // לחיצה על ההודעה סוגרת אותה
+  el.onclick = () => hideAlert(elementId);
 }
 
 function hideAlert(elementId) {
   const el = document.getElementById(elementId);
-  if (el) el.className = "alert";
+  if (!el) return;
+  el.className = "alert";
+  el.onclick = null;
+  clearTimeout(_alertTimer);
 }
 
 function escapeHtml(str) {
