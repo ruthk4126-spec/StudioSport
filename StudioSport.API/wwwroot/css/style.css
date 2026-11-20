@@ -355,67 +355,107 @@ tbody tr:hover {
 
 /* ===== הודעות ===== */
 /* ===== הודעת סטטוס קופצת =====
-   קבועה בראש המסך, כדי שהמשתמשת תראה תמיד למה פעולה נכשלה,
-   גם אחרי שגללה עמוד ארוך. ה-div נשאר במקומו ב-HTML,
-   והמצב "קופץ" מופעל רק כשיש הודעה להציג. */
+   כרטיס "טוסט" בפינה העליונה-שמאלית. ההודעה שקטה ולא חוסמת את
+   העבודה, ובכל זאת נראית גם אחרי גלילה בנייד או במסך קטן. */
 .alert {
-  padding: 14px 18px;
-  border-radius: 12px;
-  font-size: 14px;
-  margin-bottom: 18px;
   display: none;
+  margin-bottom: 18px;
+  font-size: 14px;
 }
 
 .alert.show {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: start;
+  gap: 12px;
 
   position: fixed;
-  /* מתחת ל-topbar (כ-70px), כדי לא לכסות את הניווט */
+  /* מתחת ל-topbar, בפינה הימנית — כיוון הקריאה העברי */
   top: 84px;
-  left: 50%;
-  transform: translateX(-50%);
+  right: 16px;
   z-index: 10050;
 
-  width: calc(100% - 32px);
-  max-width: 560px;
-  margin: 0;
-  box-sizing: border-box;
+  width: min(360px, calc(100vw - 32px));
+  padding: 14px 16px;
+  border-radius: 14px;
 
-  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.55);
-  animation: alertIn 0.18s ease-out;
+  color: var(--white);
+  background: rgba(18, 22, 18, 0.94);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--border-soft);
+  border-inline-start: 4px solid transparent;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6);
+
+  animation: toastIn 0.24s cubic-bezier(0.2, 0.8, 0.3, 1);
 }
 
-/* אייקון סטטוס לפני ההודעה — בלי תלות ב-HTML */
+.alert-error.show   { border-inline-start-color: var(--orange); }
+.alert-success.show { border-inline-start-color: var(--lime); }
+
+/* אייקון לפני ההודעה */
 .alert.show::before {
-  flex: 0 0 auto;
-  font-size: 15px;
-  line-height: 1.5;
-  font-weight: 700;
+  grid-column: 1;
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1;
 }
-.alert-error.show::before { content: "⚠"; color: #FFB79A; }
-.alert-success.show::before { content: "✓"; color: var(--lime); }
+.alert-error.show::before {
+  content: "!";
+  background: rgba(255, 107, 53, 0.18);
+  color: var(--orange);
+  border: 1px solid rgba(255, 107, 53, 0.45);
+}
+.alert-success.show::before {
+  content: "✓";
+  background: rgba(198, 242, 78, 0.16);
+  color: var(--lime);
+  border: 1px solid var(--border);
+}
 
-@keyframes alertIn {
-  from { opacity: 0; transform: translateX(-50%) translateY(-8px); }
-  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+/* טקסט ההודעה */
+.alert.show .alert-text {
+  grid-column: 2;
+  line-height: 1.5;
+  word-break: break-word;
+}
+
+/* כפתור סגירה */
+.alert-close {
+  grid-column: 3;
+  background: transparent;
+  border: 0;
+  color: var(--white-faint);
+  font-size: 18px;
+  line-height: 1;
+  padding: 0 2px;
+  cursor: pointer;
+  align-self: start;
+}
+.alert-close:hover { color: var(--white); }
+
+@keyframes toastIn {
+  from { opacity: 0; transform: translateX(16px) scale(0.97); }
+  to   { opacity: 1; transform: translateX(0) scale(1); }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .alert.show { animation: none; }
 }
 
-.alert-error {
-  background: rgba(255, 107, 53, 0.12);
-  border: 1px solid rgba(255, 107, 53, 0.42);
-  color: #FFB79A;
-}
-
-.alert-success {
-  background: var(--lime-soft);
-  border: 1px solid var(--border);
-  color: var(--lime);
+/* בנייד — רוחב מלא מתחת לכותרת */
+@media (max-width: 600px) {
+  .alert.show {
+    top: 76px;
+    right: 12px;
+    left: 12px;
+    width: auto;
+  }
 }
 
 /* ===== חלונית ===== */

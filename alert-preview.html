@@ -1,0 +1,172 @@
+<title>StudioSport — תצוגת הודעות</title>
+<style>
+  :root {
+    --bg: #0A0C0A;
+    --panel: #121612;
+    --lime: #C6F24E;
+    --orange: #FF6B35;
+    --white: #FFFFFF;
+    --white-dim: rgba(255,255,255,0.62);
+    --white-faint: rgba(255,255,255,0.38);
+    --border-soft: rgba(255,255,255,0.08);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--white);
+    font-family: "Assistant", "Segoe UI", Arial, sans-serif;
+    min-height: 100vh;
+    padding: 40px 20px;
+    line-height: 1.55;
+  }
+  h1 { font-size: 22px; margin-bottom: 6px; }
+  .sub { color: var(--white-dim); font-size: 14px; margin-bottom: 28px; }
+  .row { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 28px; }
+  button.try {
+    padding: 10px 18px;
+    border-radius: 10px;
+    border: 1px solid var(--border-soft);
+    background: var(--panel);
+    color: var(--white);
+    font-family: inherit;
+    font-size: 14px;
+    cursor: pointer;
+  }
+  button.try:hover { border-color: var(--lime); color: var(--lime); }
+
+  .stage {
+    background: var(--panel);
+    border: 1px solid var(--border-soft);
+    border-radius: 16px;
+    padding: 20px;
+    min-height: 180px;
+    position: relative;
+    overflow: hidden;
+  }
+  .stage-label {
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--white-faint);
+    margin-bottom: 30px;
+  }
+
+  /* ==== העיצוב החדש — טוסט בפינה ==== */
+  .alert { display: none; margin-bottom: 18px; font-size: 14px; }
+
+  .alert.show {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: start;
+    gap: 12px;
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    z-index: 10;
+    width: min(360px, calc(100% - 32px));
+    padding: 14px 16px;
+    border-radius: 14px;
+    color: var(--white);
+    background: rgba(18, 22, 18, 0.94);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--border-soft);
+    border-inline-start: 4px solid transparent;
+    box-shadow: 0 12px 32px rgba(0,0,0,0.6);
+    animation: toastIn 0.24s cubic-bezier(0.2,0.8,0.3,1);
+  }
+  .alert-error.show { border-inline-start-color: var(--orange); }
+  .alert-success.show { border-inline-start-color: var(--lime); }
+
+  .alert.show::before {
+    grid-column: 1;
+    width: 22px; height: 22px;
+    display: grid; place-items: center;
+    border-radius: 50%;
+    font-size: 13px; font-weight: 800; line-height: 1;
+  }
+  .alert-error.show::before {
+    content: "!";
+    background: rgba(255,107,53,0.18);
+    color: var(--orange);
+    border: 1px solid rgba(255,107,53,0.45);
+  }
+  .alert-success.show::before {
+    content: "✓";
+    background: rgba(198,242,78,0.16);
+    color: var(--lime);
+    border: 1px solid rgba(198,242,78,0.22);
+  }
+  .alert-text { grid-column: 2; line-height: 1.5; word-break: break-word; }
+  .alert-close {
+    grid-column: 3;
+    background: transparent; border: 0;
+    color: var(--white-faint); font-size: 18px; line-height: 1;
+    padding: 0 2px; cursor: pointer; align-self: start;
+  }
+  .alert-close:hover { color: var(--white); }
+
+  @keyframes toastIn {
+    from { opacity: 0; transform: translateX(-16px) scale(0.97); }
+    to   { opacity: 1; transform: translateX(0) scale(1); }
+  }
+  @media (prefers-reduced-motion: reduce) { .alert.show { animation: none; } }
+
+  .scroll-fill { height: 420px; }
+  .scroll-note { color: var(--white-faint); font-size: 13px; padding-top: 8px; }
+</style>
+
+<h1>תצוגת הודעות — StudioSport</h1>
+<p class="sub">לחצי על הכפתורים כדי לראות איך כל הודעה מופיעה.</p>
+
+<div class="row">
+  <button class="try" onclick="show('err')">שגיאה — שיעור מלא</button>
+  <button class="try" onclick="show('ok')">הצלחה — נרשמת</button>
+  <button class="try" onclick="show('long')">שגיאה — טקסט ארוך</button>
+  <button class="try" onclick="hide()">סגירה</button>
+</div>
+
+<div class="stage">
+  <div class="stage-label">אזור התוכן של העמוד</div>
+  <div id="pageAlert" class="alert"></div>
+  <p style="color:var(--white-dim);font-size:14px">
+    ההודעה מופיעה בפינה העליונה, מעל התוכן, ולא דוחפת אותו.
+  </p>
+</div>
+
+<div class="scroll-fill"></div>
+<p class="scroll-note">גללי למטה ולחצי שוב — ההודעה תופיע באותו מקום קבוע.</p>
+
+<script>
+  let t = null;
+  function show(kind) {
+    const el = document.getElementById('pageAlert');
+    el.innerHTML = '';
+    const text = document.createElement('span');
+    text.className = 'alert-text';
+    text.textContent = kind === 'err'
+      ? 'המקום האחרון בשיעור זה נתפס ברגע זה על ידי משתמשת אחרת. נסי לבחור שיעור אחר.'
+      : kind === 'ok'
+        ? 'ההרשמה בוצעה בהצלחה.'
+        : 'כבר נתת משוב לשיעור זה. אפשר לתת משוב אחד לכל שיעור, ולכן אין אפשרות לשלוח שוב. אם לדעתך נפלה טעות, נסי לפנות למנהלת הסטודיו.';
+    el.appendChild(text);
+
+    const close = document.createElement('button');
+    close.type = 'button';
+    close.className = 'alert-close';
+    close.setAttribute('aria-label', 'סגירת ההודעה');
+    close.textContent = '×';
+    close.addEventListener('click', hide);
+    el.appendChild(close);
+
+    const ok = kind === 'ok';
+    el.className = 'alert show ' + (ok ? 'alert-success' : 'alert-error');
+    clearTimeout(t);
+    t = setTimeout(hide, ok ? 3500 : 6500);
+  }
+  function hide() {
+    const el = document.getElementById('pageAlert');
+    el.className = 'alert';
+    el.innerHTML = '';
+    clearTimeout(t);
+  }
+</script>
