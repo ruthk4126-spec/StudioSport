@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
   <meta charset="UTF-8">
@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body style="visibility:hidden">
+  <a href="#main" class="skip-link">דלג לתוכן הראשי</a>
   <!-- העמוד מוסתר עד לאימות התפקיד, כדי שלא יראה לרגע למי שאינו מנהל.
        ההגנה הקובעת היא בשרת ([Authorize(Roles="Admin")]); זו שכבת UI. -->
   <script>
@@ -32,7 +33,7 @@
     </div>
   </header>
 
-  <main class="page">
+  <main class="page" id="main" tabindex="-1">
     <h1 class="page-title">בקשות מנוי</h1>
     <p class="page-sub">בקשות הממתינות לאישור. אישור מפעיל את המנוי לשנה ומאפשר הרשמה לשיעורים.</p>
 
@@ -147,6 +148,7 @@
           <td>${formatDate(s.startDate)}</td>
           <td style="text-align:left">
             <button class="btn btn-primary" style="font-size:14px;padding:9px 20px"
+                    aria-label="אישור בקשת מנוי של ${escapeHtml(s.username || "—")}"
                     onclick="approve(${s.id}, this)">אישור</button>
           </td>
         </tr>`).join("");

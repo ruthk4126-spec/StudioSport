@@ -33,6 +33,57 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* ===== נגישות ===== */
+
+/* סימון פוקוס גלוי לכל אלמנט אינטראקטיבי — מאפשר ניווט במקלדת.
+   :focus-visible מציג את הסימון רק כשהגיעו במקלדת, ולא בלחיצת עכבר. */
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 3px solid var(--lime);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+/* קישור "דלג לתוכן" — מוסתר עד שמגיעים אליו ב-Tab */
+.skip-link {
+  position: absolute;
+  top: -100px;
+  right: 16px;
+  z-index: 20000;
+  padding: 12px 20px;
+  background: var(--lime);
+  color: #0A0C0A;
+  font-weight: 700;
+  border-radius: 0 0 12px 12px;
+  text-decoration: none;
+  transition: top 0.15s ease;
+}
+
+.skip-link:focus {
+  top: 0;
+}
+
+/* טקסט שנקרא רק ע"י קורא מסך */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* מכבדות הפחתת תנועה */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
 /* ===== כותרת ===== */
 header.topbar {
   display: flex;

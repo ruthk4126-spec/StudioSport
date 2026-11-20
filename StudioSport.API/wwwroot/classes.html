@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="he" dir="rtl">
 
 <head>
@@ -12,6 +12,7 @@
 </head>
 
 <body>
+  <a href="#main" class="skip-link">דלג לתוכן הראשי</a>
 
   <header class="topbar">
     <div class="brand">Studio<span>Sport</span></div>
@@ -28,7 +29,7 @@
     </div>
   </header>
 
-  <main class="page">
+  <main class="page" id="main" tabindex="-1">
     <h1 class="page-title">שיעורים זמינים</h1>
     <p class="page-sub">בחרי שיעור והירשמי. המקומות מוגבלים.</p>
 
@@ -60,7 +61,7 @@
             <th>מועד</th>
             <th>מקומות</th>
             <th>סטטוס</th>
-            <th></th>
+            <th scope="col"><span class="visually-hidden">פעולות</span></th>
           </tr>
         </thead>
         <tbody id="classesBody">
@@ -242,7 +243,10 @@
           action = '<button class="btn btn-ghost" disabled style="font-size:14px;padding:9px 18px">מלא</button>';
         } else {
           badge = `<span class="badge badge-free">${c.availableSpots} פנויים</span>`;
+          // aria-label כולל את שם השיעור ואת מועדו — קורא מסך יידע על מה לוחצים
+          const label = escapeHtml(`${c.name}, ${c.availableSpots} מקומות פנויים`);
           action = `<button class="btn btn-primary" style="font-size:14px;padding:9px 20px"
+                     aria-label="הרשמה: ${label}"
                      onclick="enroll(${c.id}, this)">הירשמות</button>`;
         }
 

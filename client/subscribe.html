@@ -11,6 +11,7 @@
 </head>
 
 <body>
+  <a href="#main" class="skip-link">דלג לתוכן הראשי</a>
 
   <header class="topbar">
     <div class="brand">Studio<span>Sport</span></div>
@@ -25,7 +26,7 @@
     </div>
   </header>
 
-  <main class="page">
+  <main class="page" id="main" tabindex="-1">
     <h1 class="page-title">בחירת חבילת שיעורים</h1>
     <p class="page-sub">בחרי חבילה. הבקשה תישלח לאישור המנהל, והשיעורים ייכנסו ליתרה שלך לאחר האישור.</p>
 
@@ -111,6 +112,7 @@
           <div class="stat-value">${p.totalClasses}</div>
           <p class="meta">שיעורים</p>
           <button type="button" class="btn btn-primary" style="margin-top:16px;width:100%"
+                  aria-label="בחירת ${escapeHtml(PLAN_LABELS[p.plan] || p.plan)} — ${p.totalClasses} שיעורים"
                   onclick="choosePlan('${escapeHtml(p.plan)}')">בחירת חבילה זו</button>
         </div>`).join("");
     }

@@ -85,6 +85,7 @@
 </head>
 
 <body>
+  <a href="#main" class="skip-link">דלג לתוכן הראשי</a>
 
   <header class="topbar">
     <div class="brand">Studio<span>Sport</span></div>
@@ -99,7 +100,7 @@
     </div>
   </header>
 
-  <main class="page">
+  <main class="page" id="main" tabindex="-1">
     <h1 class="page-title">השיעורים שלי</h1>
     <p class="page-sub">השיעורים שנרשמת אליהם, והשיעורים שכבר היית בהם.</p>
 
@@ -168,10 +169,11 @@
       <h2>איך היה השיעור?</h2>
       <p id="feedbackClassInfo"></p>
 
-      <label style="display:block;margin:16px 0 6px">דירוג</label>
-      <div id="ratingRow" style="display:flex;gap:8px;justify-content:center;margin-bottom:16px"></div>
+      <span id="ratingLabel" style="display:block;margin:16px 0 6px">דירוג</span>
+      <div id="ratingRow" role="group" aria-labelledby="ratingLabel"
+           style="display:flex;gap:8px;justify-content:center;margin-bottom:16px"></div>
 
-      <label style="display:block;margin:0 0 6px">הערה (לא חובה)</label>
+      <label for="feedbackComment" style="display:block;margin:0 0 6px">הערה (לא חובה)</label>
       <textarea id="feedbackComment" rows="3"
         style="width:100%;box-sizing:border-box;padding:10px;border-radius:10px;border:1px solid #333;background:#111;color:#eee;font-family:inherit"></textarea>
 
@@ -314,6 +316,7 @@
           <td><span class="badge badge-free">רשומה</span></td>
           <td style="text-align:left">
             <button class="btn btn-ghost" style="font-size:14px;padding:9px 18px"
+                    aria-label="ביטול הרשמה: ${escapeHtml(e.className || "")}"
                     onclick="openCancel(${e.id}, '${escapeHtml(e.className || "").replace(/'/g, "\\'")}')">ביטול הרשמה</button>
           </td>
         </tr>`).join("");
@@ -342,6 +345,7 @@
           ? '<span class="badge badge-muted" title="כבר נתת משוב לשיעור זה">משוב נשלח</span>'
           : canFeedback
             ? `<button class="btn btn-ghost" style="font-size:14px;padding:9px 18px"
+                     aria-label="מתן משוב: ${escapeHtml(e.className)}"
                      onclick="openFeedback(${e.id}, '${escapeHtml(e.className)}', '${e.startTime}')">משוב</button>`
             : "";
 
@@ -426,10 +430,16 @@
 
     function renderStars() {
       const row = document.getElementById("ratingRow");
-      row.innerHTML = [1, 2, 3, 4, 5].map(n =>
-        `<button type="button" onclick="setRating(${n})"
-                 style="font-size:28px;background:none;border:none;cursor:pointer;color:${n <= currentRating ? "#b7f34d" : "#555"}">★</button>`
-      ).join("");
+      // כל כוכב מקבל שם ברור וציון המצב שלו — קורא מסך ישמע
+      // "דירוג 3 מתוך 5, לחוץ" ולא סתם "כפתור"
+      row.innerHTML = [1, 2, 3, 4, 5].map(n => {
+        const on = n <= currentRating;
+        return `<button type="button"
+                        aria-label="דירוג ${n} מתוך 5"
+                        aria-pressed="${on}"
+                        onclick="setRating(${n})"
+                        style="font-size:28px;background:none;border:none;cursor:pointer;color:${on ? "#b7f34d" : "#555"}">★</button>`;
+      }).join("");
     }
 
     function setRating(n) {
