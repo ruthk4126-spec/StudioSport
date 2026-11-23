@@ -15,13 +15,14 @@ public class AppDbContextFactory : IDesignTimeDbContextFactory<AppDbContext>
             .AddEnvironmentVariables()
             .Build();
 
-        // קודם מחרוזת החיבור, ואם אין - הרכבה ידנית ממשתני סביבה
-        var connectionString = config.GetConnectionString("Default");
+        // קודם מחרוזת החיבור, ואם אין - הרכבה ממשתני סביבה (בלי סודות בקוד)
+        var connectionString = config.GetConnectionString("Default")
+            ?? Environment.GetEnvironmentVariable("ConnectionStrings__Default");
 
         if (string.IsNullOrWhiteSpace(connectionString))
         {
             var host = config["DB_HOST"] ?? "localhost";
-            var database = config["DB_NAME"] ?? "StudioSport";
+            var database = config["DB_NAME"] ?? "StudioSportDb";
             var user = config["DB_USER"] ?? "postgres";
             var password = config["DB_PASSWORD"];
 
