@@ -1,27 +1,24 @@
-﻿bin/
-obj/
+﻿# ---------- קבצי תצוגה מקדימה (כלי עזר מקומי, לא חלק מהאתר) ----------
+_favicon-*.html
+
+# ---------- .NET ----------
+**/bin/
+**/obj/
 *.user
 *.suo
 .vs/
-.vscode/
-*.dll
-*.pdb
-[Tt]est[Rr]esult*/
-*.trx
-coverage*.json
-coverage*.xml
+
+# ---------- הגדרות מקומיות וסודות ----------
+appsettings.Development.json
 appsettings.*.local.json
 *.env
-secrets.json
-logs/
-*.log
-node_modules/
-dist/
-build/
-.idea/
-.DS_Store
-Thumbs.db
+.env
 
-StudioSport.API/appsettings.Development.json
+# ---------- קבצים זמניים ----------
+*.log
+*.tmp
 *.Backup.tmp
+
+# ---------- פלט build/publish (נוצר מחדש בכל בנייה) ----------
 publish-test/
+publish/

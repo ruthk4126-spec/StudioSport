@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  אייקון האתר (favicon) — StudioSport
+  עיצוב 2 "זורם": קו אחד רציף של האות S, עם עקומות עדינות —
+  קליל ומודרני. בגרדיאנט ליים→כתום על רקע כהה.
+  משמש גם כ-favicon ללשונית הדפדפן וגם כלוגו ב-topbar.
+  viewBox קבוע 64x64 — נקי בכל גודל, ללא קובץ ראסטר.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="סמל האתר">
+  <defs>
+    <linearGradient id="saiBrandGradient" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#C6F24E"/>
+      <stop offset="100%" stop-color="#FF6B35"/>
+    </linearGradient>
+  </defs>
+
+  <!-- רקע מעוגל בכהה של האתר -->
+  <rect x="0" y="0" width="64" height="64" rx="14" fill="#0A0C0A"/>
+  <rect x="1" y="1" width="62" height="62" rx="13" fill="none"
+        stroke="url(#saiBrandGradient)" stroke-width="2" opacity="0.55"/>
+
+  <!-- האות S — קו רציף אחד, שתי עקומות רכות יוצרות את שני הכיפופים.
+       מרכוז ב-viewBox 64x64, כולל התפשטות הקו החצי-רוחבית של הקצוות המעוגלים:
+         אופקית (x):  23.40–46.00  →  מרכז 34.70  →  הזזה 2.70- שמאלה
+         אנכית  (y):  15.40–41.90  →  מרכז 28.65  →  הזזה 3.35+ למטה
+       (המרכוז אינו תלוי בעובי הקו: קצוות מעוגלים מוסיפים חצי-רוחב מכל צד.) -->
+  <g transform="translate(-2.7 3.35)">
+    <path d="M46 22c0-3.9-5-6.6-11.3-6.6S23.4 18.3 23.4 22.3s5 5.2 11.3 6.4 11.3 2.7 11.3 6.6-5 6.6-11.3 6.6S23.4 39.2 23.4 35.3"
+          fill="none"
+          stroke="url(#saiBrandGradient)"
+          stroke-width="4.5"
+          stroke-linecap="round"/>
+  </g>
+</svg>
