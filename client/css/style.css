@@ -104,24 +104,6 @@ header.topbar {
   color: var(--lime);
 }
 
-/* אייקון הלוגו — אותו קובץ שמשמש כ-favicon (client/favicon.svg).
-   מיושר עם הטקסט בשורה, וגובהו נגזר מגודל הגופן כדי להישאר פרופורציונלי. */
-.brand-icon {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.brand-icon img,
-.brand-icon svg {
-  width: 1.45em;
-  height: 1.45em;
-  flex: none;
-  border-radius: 26%;
-  /* טבעת עדינה שמפרידה את האייקון הכהה מהרקע הכהה */
-  box-shadow: 0 0 0 1px var(--border);
-}
-
 .user-area {
   display: flex;
   align-items: center;
